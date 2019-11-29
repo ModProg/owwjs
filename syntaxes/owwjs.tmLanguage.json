@@ -1,0 +1,399 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Overwatch Workshop Javascript",
+  "scopeName": "source.owwjs",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#rules"
+    },
+    {
+      "include": "#invalid"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.owwjs",
+          "begin": "/\\*",
+          "end": "\\*/"
+        },
+        {
+          "name": "comment.line.double-slash.owwjs",
+          "match": "//.*"
+        }
+      ]
+    },
+    "rules": {
+      "patterns": [
+        {
+          "name": "support.function",
+          "match": "rule"
+        },
+        {
+          "name": "meta.rule.type",
+          "begin": "\\[",
+          "end": "\\]",
+          "captures": {
+            "0": {
+              "name": "comment.owwjs"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comments"
+            },
+            {
+              "include": "#event"
+            }
+          ]
+        },
+        {
+          "name": "meta.rule.conditions",
+          "begin": "\\(",
+          "end": "\\)",
+          "captures": {
+            "0": {
+              "name": "support.type"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comments"
+            },
+            {
+              "include": "#condition"
+            },
+            {
+              "include": "#comma"
+            }
+          ]
+        },
+        {
+          "name": "meta.rule.actions",
+          "begin": "\\{",
+          "end": "\\}",
+          "captures": {
+            "0": {
+              "name": "variable.language"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#action"
+            }
+          ]
+        }
+      ]
+    },
+    "action": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#new"
+        },
+        {
+          "include": "#functions"
+        },
+        {
+          "include": "#keywords"
+        },
+        {
+          "include": "#assign"
+        },
+        {
+          "include": "#action()"
+        },
+        {
+          "include": "#value"
+        },
+        {
+          "include": "#semicolon"
+        },
+        {
+          "include": "#action{}"
+        }
+      ]
+    },
+    "action()": {
+      "name": "meta.rule.action.().owwjs",
+      "begin": "\\(",
+      "end": "\\)",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.parameter.js"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#value"
+        },
+        {
+          "include": "#assign"
+        },
+        {
+          "include": "#comma"
+        }
+      ]
+    },
+    "value": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#new"
+        },
+        {
+          "include": "#functions"
+        },
+        {
+          "include": "#names"
+        },
+        {
+          "include": "#compares"
+        },
+        {
+          "include": "#boolops"
+        },
+        {
+          "include": "#mathops"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#value()"
+        }
+      ]
+    },
+    "action{}": {
+      "name": "meta.rule.action.{}.owwjs",
+      "begin": "\\{",
+      "end": "\\}",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.block.js"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#action"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.owwjs",
+          "match": "\\b(if|else)\\b"
+        },
+        {
+          "name": "keyword.control.loop.owwjs",
+          "match": "\\b(while|for|foreach)\\b"
+        },
+        {
+          "name": "keyword.control.flow.owwjs",
+          "match": "\\b(return)\\b"
+        }
+      ]
+    },
+    "condition": {
+      "patterns": [
+        {
+          "include": "#value"
+        }
+      ]
+    },
+    "event": {
+      "patterns": [
+        {
+          "name": "support.function.owwjs",
+          "match": "\\b(global|player|dealtDamage|finalBlow|died|killed|tookDamage)\\b"
+        },
+        {
+          "include": "#comma"
+        },
+        {
+          "name": "meta.function.params.event.owwjs",
+          "begin": "\\(",
+          "end": "\\)",
+          "patterns": [
+            {
+              "include": "#value"
+            },
+            {
+              "include": "#comma"
+            }
+          ]
+        }
+      ]
+    },
+    "boolops": {
+      "patterns": [
+        {
+          "name": "keyword.operator.logical.owwjs",
+          "match": "(&&|\\|\\|)"
+        }
+      ]
+    },
+    "mathops": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arithmetic.owwjs",
+          "match": "(\\+|\\-|\\*\\*|\\*|\\/|\\^)"
+        }
+      ]
+    },
+    "assign": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.owwjs",
+          "match": "="
+        }
+      ]
+    },
+    "semicolon": {
+      "patterns": [
+        {
+          "name": "punctuation.terminator.statement.owwjs",
+          "match": ";"
+        }
+      ]
+    },
+    "comma": {
+      "name": "punctuation.separator.comma.owwjs",
+      "match": "\\,"
+    },
+    "compares": {
+      "patterns": [
+        {
+          "name": "keyword.operator.relational.owwjs",
+          "match": "(>=|<=|>|<)"
+        },
+        {
+          "name": "keyword.operator.comparison.owwjs",
+          "match": "=="
+        }
+      ]
+    },
+    "value()": {
+      "name": "meta.rule.action.().owwjs",
+      "begin": "\\(",
+      "end": "\\)",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.parameter.js"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#value"
+        },
+        {
+          "include": "#comma"
+        }
+      ]
+    },
+    "names": {
+      "patterns": [
+        {
+          "include": "#property"
+        },
+        {
+          "include": "#constants"
+        },
+        {
+          "include": "#variables"
+        }
+      ]
+    },
+    "property": {
+      "begin": "\\.",
+      "end": "((setStatus|allowButton|applyImpulse|chaseAt|chaseOver|communicate|modHealth|destroy|decVictory|decDraw|decRoundVic|gtAssembleHeroes|kill|pauseTime|cacheHero|pressButton|resetPlayerHeroes|respawn|resurrect|accelerate|camera|startFacing|forceHero|forceSpawn|forceThrottle|startHoldingButton|stopAcceleration)|([[:alnum:]_]*))\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.accessor.owwjs"
+        }
+      },
+      "endCaptures": {
+        "2": {
+          "name": "support.function.property.owwjs"
+        },
+        "3": {
+          "name": "support.variable.property.owwjs"
+        }
+      }
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "support.constant.math.owwjs",
+          "match": "\\b(team|player|space|event|alignment|color|elem)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "support.function.owwjs",
+          "match": "\\b(playEffect|playSound)\\b"
+        }
+      ]
+    },
+    "new": {
+      "begin": "\\bnew\\b",
+      "end": "\\b[[:alpha:]_][[:alnum:]_]*\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.operator.new.owwjs"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "entity.name.type.owwjs"
+        }
+      }
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "storage.type.owwjs",
+          "match": "\\b(global|local)\\b"
+        },
+        {
+          "name": "variable.other.readwrite.owwjs",
+          "match": "\\b[[:alpha:]_][[:alnum:]_]*\\b"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.owwjs",
+      "begin": "(\\\"|\\')",
+      "end": "(\\\"|\\')"
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.decimal.owwjs",
+          "match": "\\b\\d+(\\.\\d+)?"
+        }
+      ]
+    },
+    "invalid": {
+      "name": "invalid.illegal.owwjs",
+      "match": "."
+    }
+  }
+}

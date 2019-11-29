@@ -1,0 +1,47 @@
+{
+	"editor.insertSpaces": false,
+	"tslint.enable": true,
+	"typescript.tsc.autoDetect": "off",
+	"typescript.preferences.quoteStyle": "single",
+	"cSpell.enabled": false,
+	"cSpell.enabledLanguageIds": [
+		"asciidoc",
+		"c",
+		"cpp",
+		"csharp",
+		"css",
+		"git-commit",
+		"go",
+		"handlebars",
+		"html",
+		"jade",
+		"java",
+		"javascript",
+		"javascriptreact",
+		"json",
+		"jsonc",
+		"latex",
+		"less",
+		"markdown",
+		"php",
+		"plaintext",
+		"pug",
+		"python",
+		"restructuredtext",
+		"rust",
+		"scala",
+		"scss",
+		"text",
+		"typescript",
+		"typescriptreact",
+		"yaml",
+		"yml"
+	],
+	"spellright.language": [
+		"en_GB"
+	],
+	"spellright.documentTypes": [
+		"markdown",
+		"latex"
+	]
+}
