@@ -180,7 +180,7 @@ export function returnEnd(text: string, regex: RegExp, skipString = true): [numb
 	return [text.length, ""]
 }
 
-export function toPlayerProps(name: TypE, vars: VariableBlock, props: Map<string, typeof Prop>): Map<string, typeof Prop>|null {
+/* export function toPlayerProps(name: TypE, vars: VariableBlock, props: Map<string, typeof Prop>): Map<string, typeof Prop> | null {
 	if (name != TypE.player) return null
 	let p: Map<string, typeof Prop> = new Map([...props])
 	vars.forEach((v, k) => {
@@ -188,6 +188,15 @@ export function toPlayerProps(name: TypE, vars: VariableBlock, props: Map<string
 	})
 	return p
 }
+
+export function addPlayerVar(name: string, variable: Variable, ...maps: (VariableBlock | Map<string, typeof Prop>)[]) {
+	maps.forEach(v => {
+		if (v instanceof VariableBlock)
+			v.set(name, variable)
+		else
+			v.add(name, VarProp.get(variable.pointer, variable.type))
+	})
+} */
 
 export function Elem(v: Value): Variable {
 	return { const: false, isValue: Value.isValue, type: (v.type as ArrayType).type, toString: (g?: boolean) => "Current Array Element", pointer: 1, global: false, name: "Current Array Element", getArray: () => new ArrayInit, comments: [] }

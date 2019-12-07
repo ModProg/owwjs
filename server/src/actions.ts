@@ -4,7 +4,6 @@ import { localRuleInd } from './build';
 import _ = require('underscore');
 import { VariableBlock, SynErr, Comment, BlockComment } from './typeUtil';
 import { findParan, findEnd, splitWP, splitWPToken } from './helper';
-import { playerVariables } from './params';
 
 export interface Action {
 	disabled: boolean
@@ -252,7 +251,7 @@ export class Assignment extends Action {
 			} else {
 				let split2 = splitWP(split[0], /\./)
 				let vs = split2.slice(0, split2.length - 1).join(".")
-				let val = Value.parse(vs, global, local, TypE.player)
+				let val = Value.parse(vs, global, local, TypE.playery)
 				let ts = splitWP(split2[split2.length - 1], /:/)
 				if (val && /^\s*[\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*\s*$/u.test(ts[0]))
 					if (ts.length <= 2) {
@@ -272,12 +271,16 @@ export class Assignment extends Action {
 							if (value) {
 								if (!type)
 									type = value.type
-								playerVariables.set(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false))
+								//playerVariables.set(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false))
+								Type.get(TypE.player).props.add(new Variable(type, -1, ts[0].replace(/\s*/g, ""), false))
+								// Type.get(TypE.player).props.add(ts[0].replace(/\s*/g, ""), new Variable(type, -1, ts[0], false))
 								return { action: new Assignment(value, Prop.parse(vs + "." + ts[0], global, local, undefined, true) as Prop, false), length: text.length, errors: [] }
 							}
 						} else {
 							if (type) {
-								playerVariables.set(ts[0], new Variable(type, playerVariables.inc(), ts[0], false))
+								Type.get(TypE.player).props.add(new Variable(type, -1, ts[0].replace(/\s*/g, ""), false))
+								// addPlayerVar(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false), Type.get(TypE.player).props)
+								// playerVariables.set(ts[0], new Variable(type, playerVariables.inc(), ts[0], false))
 								return { action: null, length: text.length, errors: [] }
 							}
 						}
@@ -299,7 +302,7 @@ export class Assignment extends Action {
 			v = a.toString(g, indent) + "\n" + indent
 		let prestring = super.toString(g, indent) + v + (this.disabled ? "disabled " : "")
 		if (!(this.index instanceof Prop))
-			return prestring + "Set " + (g || this.global ? "Global" : "Player") + " Variable At Index(" + (this.global ? "A, " + this.index : "B, " + (this.index as number + localRuleInd)) + ", " + this.value.toString(g) + ");"
+			return prestring + "Set " + (g || this.global ? "Global" : "Player") + " Variable At Index(" + (g || this.global ? "" : "Event Player, ") + (this.global ? "A, " + this.index : "B, " + (this.index as number + localRuleInd)) + ", " + this.value.toString(g) + ");"
 		return prestring + this.index.toString(g, indent, this.value)
 	}
 }
@@ -386,8 +389,6 @@ export class Modify extends Assignment {
 		return prestring + this.index.toString(g, indent, this.value, this.operation)
 	}
 }
-
-
 
 export class Function extends Action {
 

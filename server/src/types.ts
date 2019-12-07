@@ -1,9 +1,8 @@
 import _ = require('underscore');
-import { toCamelSep, splitWP, trueForAny, trueForEach, toTitle, findEnd, returnEnd, splitWPToken, findParan, toPlayerProps, Elem } from './helper';
-import { VariableBlock, Comment, SynErr } from './typeUtil';
+import { toCamelSep, splitWP, trueForAny, trueForEach, toTitle, findEnd, returnEnd, splitWPToken, findParan, Elem } from './helper';
+import { VariableBlock, Comment, SynErr, Properties } from './typeUtil';
 import { localRuleInd } from './build';
 import { DiagnosticSeverity } from 'vscode-languageserver';
-import { playerVariables } from './params';
 
 function toType(name: TypE, saveAble?: boolean, translation?: string, modifier?: string[] | string, def?: Value | string): [string, Type]
 function toType(name: TypE, values: typeof Value[], saveAble?: boolean, translation?: string, modifier?: string[] | string, def?: Value | string): [string, Type]
@@ -116,7 +115,6 @@ export enum TypE {
 	array = "Array",
 	abilities = "Abilities",
 	ability = "Ability",
-	function = "Function",
 	game = "Game",
 	filter = "Filter",
 	world = "World",
@@ -244,7 +242,7 @@ export class Variable implements Value {
 	pointer: string | number;
 	global = true
 	name = "a"
-	static playerVars = "E"
+	static playerVars = "A"
 	getArray = () => new ArrayInit
 	constructor(obj: { type?: TypE | Type, pointer: string | number, name: string, local?: boolean })
 	constructor(type: TypE | Type, pointer: string | number, name: string, local: boolean)
@@ -482,8 +480,8 @@ export class Prop extends AbstractValue {
 }
 
 export class VarProp extends Prop {
-	static get(pointer: string | number, type: Type): typeof Prop {
-		return class extends VarProp { index = pointer; static type = type }
+	static get(variable?: Variable): typeof Prop | undefined {
+		return variable ? class extends VarProp { index = (variable as Variable).pointer; static type = (variable as Variable).type } : undefined
 	}
 	index: number | string = 0
 	static access = PropType.sgm
@@ -1545,12 +1543,8 @@ export class Type {
 	values: typeof Value[]
 	defau: Value | null | string
 	static boolables: (Type | TypE)[] = [TypE.player, TypE.number]
-	get props(): Map<string, typeof Prop> {
-		return toPlayerProps(this.name, playerVariables, this.prop) || this.prop
-	}
-	private prop: Map<string, typeof Prop>
+	props: Properties
 	modifiers: string[] = []
-	arrayProps: Map<string, typeof Prop> = new Map()
 	static get undefined(): Type {
 		return Type.get(TypE.undefined)
 	}
@@ -1589,13 +1583,12 @@ export class Type {
 		return type || Type.undefined
 	}
 
-	constructor(name: TypE, values: typeof Value[], props: Map<string, typeof Prop> | [string, typeof Prop][], arrayProps: Map<string, typeof Prop> | [string, typeof Prop][], saveAble: boolean = true, translation?: string, modifiers: string[] = [], defau: Value | string | null = null) {
+	constructor(name: TypE, values: typeof Value[], props: Properties | Map<string, typeof Prop> | [string, typeof Prop][], arrayProps: Map<string, typeof Prop> | [string, typeof Prop][] = [], saveAble: boolean = true, translation?: string, modifiers: string[] = [], defau: Value | string | null = null) {
 		this.name = name
 		this.saveAble = saveAble
 		//TODO playerprop
 		this.translation = translation || toCamelSep(name)
-		this.prop = props instanceof Map ? props : new Map(props)
-		this.arrayProps = arrayProps instanceof Map ? arrayProps : new Map(arrayProps)
+		this.props = props instanceof Properties ? props : new Properties(props instanceof Map ? props : new Map(props), !arrayProps || arrayProps instanceof Map ? arrayProps : new Map(arrayProps))
 
 		this.values = values
 		this.modifiers = modifiers
@@ -1648,13 +1641,9 @@ export class ArrayType extends Type {
 	}
 	public set translation(v: string) { }
 	values: (typeof Value)[] = [];
-	public get props(): Map<string, typeof Prop> {
-		return new Map([...Type.get(TypE.array).props, ...this.type.arrayProps]);
+	public get props(): Properties {
+		return super.props.array;
 	}
-
-
-
-	public set props(v: Map<string, typeof Prop>) { }
 
 	invProps: { type: TypE; name: string; }[] = [];
 	public equals(obj: Object): boolean {
@@ -1673,23 +1662,24 @@ export class ArrayType extends Type {
 }
 
 Type.types = new Map([
-	toType(TypE.color, false),
-	toType(TypE.button, [], [
-		toProp("enable", "Allow Button($--v$, $v$)", TypE.function),
-		toProp("disable", "Set Ability $v$ Enabled($--v$, False)", TypE.function)], false),
-	toType(TypE.status, false), toType(TypE.teamConst, [TeamConst], false, "Team Constant"),
-	toType(TypE.playerConst, [PlayerConst], [], false, "Player Constant"),
-	toType(TypE.shortVisualEffect, false), toType(TypE.shortAudibleEffect, false),
-	toType(TypE.longVisualEffect, false), toType(TypE.longAudibleEffect, false),
-	toType(TypE.string, [StringConst], false, "String Constant"), toType(TypE.communicate, false),
-	toType(TypE.icon, false), toType(TypE.space, false), toType(TypE.hudLocation, false),
-	toType(TypE.abilities, [], [toProp("2", "2", TypE.ability)], false),
 	toType(TypE.ability, [], [
-		toProp("enable", "Set Ability $v$ Enabled($--v$, True)", TypE.function),
-		toProp("disable", "Set Ability $v$ Enabled($--v$, False)", TypE.function)], false),
+		toProp("enable", "Set Ability $v$ Enabled($--v$, True)", TypE.void),
+		toProp("disable", "Set Ability $v$ Enabled($--v$, False)", TypE.void)], false),
+	toType(TypE.button, [], [
+		toProp("enable", "Allow Button($--v$, $v$)", TypE.void),
+		toProp("disable", "Set Ability $v$ Enabled($--v$, False)", TypE.void)], false),
+	toType(TypE.color, false),
 	toType(TypE.hero, [], [
 		toProp("icon", "Hero Icon String($v$)", TypE.string)
 	]),
+	toType(TypE.playerConst, [PlayerConst], [], false, "Player Constant"),
+	toType(TypE.longVisualEffect, false), toType(TypE.longAudibleEffect, false),
+	toType(TypE.icon, false), toType(TypE.space, false), toType(TypE.hudLocation, false),
+	toType(TypE.abilities, [], [toProp("2", "2", TypE.ability)], false),
+	toType(TypE.shortVisualEffect, false), toType(TypE.shortAudibleEffect, false),
+	toType(TypE.status, false),
+	toType(TypE.string, [StringConst], false, "String Constant"), toType(TypE.communicate, false),
+	toType(TypE.teamConst, [TeamConst], false, "Team Constant"),
 	toType(TypE.hudText, [Class]),
 	toType(TypE.number, [NumConst, NumOp], [toProp("abs", "Absolute Value($v$)", TypE.number),
 	toProp("min", "Min($p$)", TypE.number, ["v", TypE.number]),
@@ -1702,10 +1692,12 @@ Type.types = new Map([
 	]),
 	toType(TypE.team, [], [
 		toProp("roundVictory", "Declare Round Victory($v$)"),
-		toProp("victory", "Declare Team Victory($v$)")
-	]), toType(TypE.undefined),
+		toProp("victory", "Declare Team Victory($v$)"),
+		toProp("score", ["Team Score($v$)", "Set Team Score($v$, $s$)", "Modify Team Score($v$, $s$)"], TypE.number, [], "+"),
+	], [toProp("score", [null, "Set Team Score($v$, $s$)", "Modify Team Score($v$, $s$)"], TypE.number, [], "+")]),
+	toType(TypE.undefined),
 	toType(TypE.world, [], [
-		toProp("destroyAll", (v, g, i = "") => { return "Destroy All Effects();\n" + i + "Destroy All Icons();\n" + i + "Destroy All In-World Text()" }, TypE.function, [], undefined, 3)
+		toProp("destroyAll", (v, g, i = "") => { return "Destroy All Effects();\n" + i + "Destroy All Icons();\n" + i + "Destroy All In-World Text()" }, TypE.void, [], undefined, 3)
 	]),
 	toType(TypE.array, [], [
 		toProp("length", "Count Of($v$)", TypE.number),
@@ -1717,7 +1709,7 @@ Type.types = new Map([
 				return "Modify " + (global || l.global ? "Global" : "Player") + " Variable At Index(" + (l.global ? "A, " + l.pointer : "B, " + (l.pointer as number + localRuleInd)) + ", Append To Array, " + val.toString(g) + ")"
 			}
 			return ""
-		}, TypE.function, ["v", "-[]"]),
+		}, TypE.void, ["v", "-[]"]),
 		toProp("filter", "Filtered Array($p$)", "t", ["v", (v, t, g, l) => {
 			g.temp("elem", Elem(v))
 			let val = Value.parse(t, g, l, TypE.bool)
@@ -1744,10 +1736,11 @@ Type.types = new Map([
 		}])
 	], true),
 	toType(TypE.bool, [BoolConst, Comp, BoolOp], true, "Boolean", undefined, "true"),
-	toType(TypE.void, [], [toProp("wait", "Wait($p$, Ignore Condition)", TypE.function, [TypE.number])]),
+	toType(TypE.void, [], [toProp("wait", "Wait($p$, Ignore Condition)", TypE.void, [TypE.number])]),
 	toType(TypE.game, [], [
 		toProp("draw", "Declare Match Draw()", TypE.void),
-		toProp("assemble", "Go To Assemble Heroes()"),
+		toProp("assemble", "Go To Assemble Heroes()", TypE.void),
+		toProp("pauseTime","Pause Match Time()"),
 
 		toProp("destroyEffects", "Destroy All Effects()"),
 		toProp("destroyHUD", "Destroy All HUD Text()"),
@@ -1756,38 +1749,41 @@ Type.types = new Map([
 		toProp("destroyText", "Destroy All HUD Text(); Destroy All In-World Text()"),
 		toProp("destroyAll", "Destroy All Effects(); Destroy All HUD Text(); Destroy All Icons(); Destroy All In-World Text()"),
 
-		toProp("enableAnnouncer", "$p0|Enable Built-In Game Mode Announcer|Disable Built-In Game Mode Announcer()", TypE.function, [TypE.bool]),
-		toProp("enableCompletion", "$p0|Enable Built-In Game Mode Completion|Disable Built-In Game Mode Completion()", TypE.function, [TypE.bool]),
-		toProp("enableMusic", "$p0|Enable Built-In Game Mode Music|Disable Built-In Game Mode Music()", TypE.function, [TypE.bool]),
-		toProp("enableScoring", "$p0|Enable Built-In Game Mode Scoring|Disable Built-In Game Mode Scoring()", TypE.function, [TypE.bool]),
+		toProp("enableAnnouncer", "$p0|Enable Built-In Game Mode Announcer|Disable Built-In Game Mode Announcer()", TypE.void, [TypE.bool]),
+		toProp("enableCompletion", "$p0|Enable Built-In Game Mode Completion|Disable Built-In Game Mode Completion()", TypE.void, [TypE.bool]),
+		toProp("enableMusic", "$p0|Enable Built-In Game Mode Music|Disable Built-In Game Mode Music()", TypE.void, [TypE.bool]),
+		toProp("enableScoring", "$p0|Enable Built-In Game Mode Scoring|Disable Built-In Game Mode Scoring()", TypE.void, [TypE.bool]),
 	], false),
 	toType(TypE.player, [], [
-		arProp("damage", "Damage($p0$, $p2$, $p1$)", TypE.function, ["v", TypE.number, [TypE.null, TypE.player]]),
-		arProp("heal", "Heal($p0$, $p2$, $p1$)", TypE.function, ["v", TypE.number, [TypE.null, TypE.player]]),
-		arProp("kill", "Kill($p0$, $p1$)", TypE.function, ["v", [TypE.null, TypE.player]]),
-
-		arProp("enableRespawn", "$p1|Enable Built-In Game Mode Respawning|Disable Built-In Game Mode Respawning$($p0$)", TypE.function, ["v", TypE.bool]),
-		arProp("deathSpectateAll", "$p1|Enable Death Spectate All Players|Disable Death Spectate All Players$($p0$)", TypE.function, ["v", TypE.bool]),
-		arProp("deathSpectateHUD", "$p1|Enable Death Spectate Target HUD|Disable Death Spectate Target HUD$($p0$)", TypE.function, ["v", TypE.bool]),
-		arProp("enableButton", "$p2|Allow Button|Disallow Button$($p0$, $p1$)", TypE.function, ["v", TypE.button, TypE.bool]),
-
-		toProp("direction", ["Direction Towards($p$)"], TypE.vector, ["v", [TypE.player, TypE.vector]]),
 		toProp("abilities", "abilities", TypE.abilities),
-		toProp("position", "Position Of($v$)", TypE.vector),
-		toProp("exists", "Entity Exists($v$)", TypE.bool),
-		toProp("dead", "Is Dead($v$)", TypE.bool),
 		toProp("alive", "Is Alive($v$)", TypE.bool),
-		toProp("points", ["Score Of($v$)", "Set Player Score($v$, $s$)", "Modify Player Score($v$, $s$)"], TypE.number, [], "+"),
-		toProp("holding", ["Is Button Held($p$)"], TypE.bool, ["v", TypE.button]),
-		toProp("setStatus", ["Set Status($p$)"], TypE.bool, ["v", TypE.status, TypE.number]),
-		toProp("rayCast", ["Ray Cast Hit Player(Eye Position($p0$), Add(Multiply($p1$, Facing Direction Of($p0$)), Eye Position($p0$))"], TypE.player, ["v", TypE.number, [TypE.player, new ArrayType(TypE.player)]]),
+		toProp("applyImpulse", "Apply Impules($p0$, $p1$, $p2$, $p3|To World|To Player$, $p4|Cancel Contrary Motion|Incorporate Contrary Motion$)", TypE.void, ["v", TypE.vector, TypE.number, TypE.bool, TypE.bool]),
+		toProp("communicate", "Communicate($p$)", TypE.void, ["v", [TypE.emote, TypE.voiceLine, TypE.communicate]]),
+		arProp("damage", "Damage($p0$, $p2$, $p1$)", TypE.void, ["v", TypE.number, [TypE.null, TypE.player]]),
+		toProp("dead", "Is Dead($v$)", TypE.bool),
+		arProp("deathSpectateAll", "$p1|Enable Death Spectate All Players|Disable Death Spectate All Players$($p0$)", TypE.void, ["v", TypE.bool]),
+		arProp("deathSpectateHUD", "$p1|Enable Death Spectate Target HUD|Disable Death Spectate Target HUD$($p0$)", TypE.void, ["v", TypE.bool]),
+		toProp("direction", ["Direction Towards($p$)"], TypE.vector, ["v", [TypE.player, TypE.vector]]),
 		toProp("distance", ["Distance Between($p$)"], TypE.number, ["v", [TypE.player, TypE.vector]]),
-		toProp("applyImpulse", "Apply Impules($p0$, $p1$, $p2$, $p3|To World|To Player$, $p4|Cancel Contrary Motion|Incorporate Contrary Motion$)", TypE.function, ["v", TypE.vector, TypE.number, TypE.bool, TypE.bool]),
-		toProp("dot", "Start Damage Over Time($p0$, Null, $p1$, $p2$)", TypE.function, ["v", TypE.number, TypE.number]),
+		toProp("dot", "Start Damage Over Time($p0$, Null, $p1$, $p2$)", TypE.void, ["v", TypE.number, TypE.number]),
+		arProp("enableRespawn", "$p1|Enable Built-In Game Mode Respawning|Disable Built-In Game Mode Respawning$($p0$)", TypE.void, ["v", TypE.bool]),
+		arProp("enableButton", "$p2|Allow Button|Disallow Button$($p0$, $p1$)", TypE.void, ["v", TypE.button, TypE.bool]),
+		toProp("exists", "Entity Exists($v$)", TypE.bool),
+		arProp("heal", "Heal($p0$, $p2$, $p1$)", TypE.void, ["v", TypE.number, [TypE.null, TypE.player]]),
+		arProp("kill", "Kill($p0$, $p1$)", TypE.void, ["v", [TypE.null, TypE.player]]),
+		toProp("holding", ["Is Button Held($p$)"], TypE.bool, ["v", TypE.button]),
+		toProp("position", "Position Of($v$)", TypE.vector),
+		arProp("preLoadHero","Preload Hero($p$)",TypE.void,["v", TypE.hero]),
+		arProp("pressButton","Press Button",TypE.void,["v",TypE.button]),
+		toProp("rayCast", ["Ray Cast Hit Player(Eye Position($p0$), Add(Multiply($p1$, Facing Direction Of($p0$)), Eye Position($p0$))"], TypE.player, ["v", TypE.number, [TypE.player, new ArrayType(TypE.player)]]),
+		arProp("resetHerosAvalible","Reset Player Hero Availability($v$)"),
+		arProp("respawn","Respawn($v$)"),
+		arProp("resurrect","Resurrect($v$)"),
+		toProp("score", ["Score Of($v$)", "Set Player Score($v$, $s$)", "Modify Player Score($v$, $s$)"], TypE.number, [], "+"),
+		toProp("setStatus", ["Set Status($p$)"], TypE.bool, ["v", TypE.status, TypE.number]),
 		toProp("vertFacingAngle", "Vertical Facing Angle Of($v$)", TypE.number),
-		toProp("communicate", "Communicate($p$)", TypE.function, ["v", [TypE.emote, TypE.voiceLine, TypE.communicate]]),
 		toProp("victory", "Declare Player Victory($v$)")
-	], [toProp("points", [null, "Set Player Score($v$, $s$)", "Modify Player Score($v$, $s$)"], TypE.number, [], "+")], true, undefined, undefined, "event.player"),
+	], [toProp("score", [null, "Set Player Score($v$, $s$)", "Modify Player Score($v$, $s$)"], TypE.number, [], "+")], true, undefined, undefined, "event.player"),
 	toType(TypE.null, undefined, undefined, undefined, "null"),
 ])
 class ConstValue extends AbstractValue {

@@ -11,10 +11,9 @@ export function findPlayer(text: string, position: number): { value: PlayerE, te
 
 }
 export const variables = new VariableBlock()
-export const playerVariables = new VariableBlock()
 export function resetVars() {
 	variables.clear()
-	playerVariables.clear()
+	Type.get(TypE.player).props.clear()
 }
 export function parseComment(text: string, cb: (comment: Comment, length: number) => void) {
 

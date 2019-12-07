@@ -1,4 +1,4 @@
-import { Variable, PlayerConst, TeamConst, Value } from './types';
+import { Variable, PlayerConst, TeamConst, Value, Prop, VarProp } from './types';
 import _ = require('underscore');
 import { Action } from './actions';
 import { DiagnosticSeverity } from 'vscode-languageserver';
@@ -53,6 +53,38 @@ export class VariableBlock extends Map<string, Variable>{
 		this.index = 0
 	}
 
+}
+
+export class Properties extends Map<string, typeof Prop | Variable>{
+	vars: Map<string, Variable> = new Map();
+	private props: Map<string, typeof Prop> = new Map();
+	private arrayProps: Map<string, typeof Prop> = new Map();
+
+	get array() {
+		return new Properties(this.arrayProps)
+	}
+
+	constructor(props?: Map<string, typeof Prop>, arrayProps?: Map<string, typeof Prop>, vars?: Map<string, Variable>) {
+		super()
+		this.vars = vars || new Map
+		this.props = props || new Map
+		this.arrayProps = arrayProps || new Map
+	}
+	index = 0;
+	clear() {
+		this.vars.clear()
+		this.index = 0
+	}
+	var = (key: string) => VarProp.get(this.vars.get(key))
+
+	get(key: string, array = false): typeof Prop | undefined {
+		return array ? this.arrayProps.get(key) || this.var(key) : this.props.get(key) || this.var(key)
+	}
+	add(prop: Variable) {
+		if (prop.pointer = -1)
+			prop.pointer = this.index++;
+		this.vars.set(prop.name, prop)
+	}
 }
 
 export class SynErr {

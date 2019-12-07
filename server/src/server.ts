@@ -20,7 +20,7 @@ import { findPlayer, parseComment, parseBlockComment, parseRule, parseAir, parse
 import { buildRules, resetLocalRuleInd } from './build';
 import _ = require('underscore');
 import { Rule, Comment } from './typeUtil';
-import { ArrayConst, ArrayInit } from './types';
+import { ArrayConst, ArrayInit, Type, TypE } from './types';
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 let connection = createConnection(ProposedFeatures.all);
@@ -236,7 +236,7 @@ async function validateTextDocument(textDocument: TextDocument, cb: () => void =
 		else
 			rulesC.push(rule)
 	})
-	fs.write(file, JSON.stringify({ rules: rulesC, globalVars: strMapToObj(variables) }, null, "\t"), () => { })
+	fs.write(file, JSON.stringify({ rules: rulesC, globalVars: strMapToObj(variables),playerVars: Type.get(TypE.player).props.vars }, null, "\t"), () => { })
 
 	fs.open(new URL(textDocument.uri.replace(/(?<=\/)[^/]*?$/, (substring) => { return substring.replace(/[^.]*$/, "ows") })), "w", (error, file) => {
 		if (error) return

@@ -21,7 +21,17 @@
 			"name": "Attach to Server",
 			"port": 6036,
 			"restart": true,
-			"outFiles": ["${workspaceRoot}/server/out/**/*.js"]
+			"outFiles": ["${workspaceRoot}/server/out/**/*.js"],
+			"timeout": 5000
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Server2",
+			"port": 6036,
+			"restart": true,
+			"outFiles": ["${workspaceRoot}/server/out/**/*.js"],
+			"timeout": 30000
 		},
 		{
 			"name": "Language Server E2E Test",
@@ -39,7 +49,7 @@
 	"compounds": [
 		{
 			"name": "Client + Server",
-			"configurations": ["Launch Client", "Attach to Server"]
+			"configurations": ["Launch Client", "Attach to Server2"]
 		}
 	]
 }
