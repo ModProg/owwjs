@@ -1,8 +1,8 @@
-import _ = require('underscore');
-import { toCamelSep, splitWP, trueForAny, trueForEach, toTitle, findEnd, returnEnd, splitWPToken, findParan, Elem } from './helper';
-import { VariableBlock, Comment, SynErr, Properties } from './typeUtil';
-import { localRuleInd } from './build';
-import { DiagnosticSeverity } from 'vscode-languageserver';
+import _ = require('underscore')
+import { toCamelSep, splitWP, trueForAny, trueForEach, toTitle, findEnd, returnEnd, splitWPToken, findParan, Elem } from './helper'
+import { VariableBlock, Comment, SynErr, Properties } from './typeUtil'
+import { localRuleInd } from './build'
+import { DiagnosticSeverity } from 'vscode-languageserver'
 
 function toType(name: TypE, saveAble?: boolean, translation?: string, modifier?: string[] | string, def?: Value | string): [string, Type]
 function toType(name: TypE, values: typeof Value[], saveAble?: boolean, translation?: string, modifier?: string[] | string, def?: Value | string): [string, Type]
@@ -38,8 +38,8 @@ function toType(name: TypE, sa_va_va_va?: typeof Value[] | boolean, tr_sa_pr_pr?
 				arrayProps = mod_tr_sa_ap as [string, typeof Prop][]
 				saveAble = def_mod_tr_sa as boolean | undefined
 				translation = _def_mod_tr as string | undefined
-				modifiers = __def_mod as (string | string[] | undefined);
-				defau = def;
+				modifiers = __def_mod as (string | string[] | undefined)
+				defau = def
 			}
 		}
 	}
@@ -52,7 +52,12 @@ function toType(name: TypE, sa_va_va_va?: typeof Value[] | boolean, tr_sa_pr_pr?
 // | [string, string | ((value: Value | Value[], global?: boolean) => string), TypE | string] | [string, string | ((value: Value | Value[], global?: boolean) => string), TypE | string, (string | TypE | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]]
 //function toProp(name: string, translation: string | ((value: Value | Value[], global?: boolean) => string) | null | (string | ((value: Value | Value[], global?: boolean) => string) | null)[], type: Type | TypE | string): [string, typeof Prop]
 //function toProp(name: string, translation: string | ((value: Value | Value[], global?: boolean) => string) | null | (string | ((value: Value | Value[], global?: boolean) => string) | null)[], type: Type | TypE | string, parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]): [string, typeof Prop]
-function toProp(name: string, translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[], type: Type | TypE | string = TypE.void, parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [], modifiers?: string | string[], lines = 1): [string, typeof Prop] {
+function toProp(name: string,
+	translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[],
+	type: Type | TypE | string | (Type | TypE | string)[] = TypE.void,
+	parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [],
+	modifiers?: string | string[], lines = 1,
+	optReturn = "", retType = TypE.undefined): [string, typeof Prop] {
 	modifiers = modifiers ? [...modifiers] : undefined
 	return [name, class extends Prop {
 		getter = translation instanceof Array ? translation[0] || null : translation
@@ -61,6 +66,8 @@ function toProp(name: string, translation: string | ((value: Value | Value[], gl
 		modifier = translation instanceof Array ? translation[2] || null : null
 		static access: PropType = (translation ? (translation instanceof Array ? (translation[0] ? PropType.get : 0) | (translation[1] ? PropType.set : 0) | (translation[2] ? PropType.mod : 0) : PropType.get) : 0)
 		static type = type;
+		static retType = retType;
+		static optReturn = optReturn.length ? optReturn : null;
 		static params = parameters
 		lines = lines
 		static modifiers = modifiers as string[] | undefined
@@ -70,9 +77,14 @@ function toProp(name: string, translation: string | ((value: Value | Value[], gl
 	}]
 }
 
-function arProp(name: string, translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[], type: Type | TypE | string = TypE.void, parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [], modifiers?: string | string[], lines = 1): [string, typeof Prop] {
-	let p = toProp(name, translation, type, parameters, modifiers, lines)
-	p[1].array = true;
+function arProp(name: string,
+	translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[],
+	type: Type | TypE | string | (Type | TypE | string)[] = TypE.void,
+	parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [],
+	modifiers?: string | string[], lines = 1,
+	optReturn = "", retType = TypE.void): [string, typeof Prop] {
+	let p = toProp(name, translation, type, parameters, modifiers, lines, optReturn, retType)
+	p[1].array = true
 	return p
 }
 
@@ -121,13 +133,15 @@ export enum TypE {
 	void = "Void",
 	vectory = "Vectory",
 	playery = "Playery",
-	null = "Null"
+	null = "Null",
+	side = "side",
+	damageModification = "damageModification"
 }
 
 export interface Value {
 	comments: Comment[]
 	value?: any
-	toString(global?: boolean, indent?: string): string
+	toString(global?: boolean, indent?: string, stack?: string[]): string
 	const: boolean
 }
 
@@ -141,7 +155,7 @@ export class Value implements Value {
 		else return false
 	}
 	static typE = TypE.undefined
-	static parseables: (typeof Value | typeof Variable)[];
+	static parseables: (typeof Value | typeof Variable)[]
 	get type(): Type {
 		return this.t || Type.get((<typeof Value>this.constructor).typE)
 	}
@@ -150,7 +164,7 @@ export class Value implements Value {
 		return new ArrayInit
 	}
 	constructor(comments?: Comment[], v?: any) {
-		this.comments = comments || [];
+		this.comments = comments || []
 	}
 	static parse(texti: string | null | undefined, global: VariableBlock, local?: VariableBlock, type?: Type | TypE | (Type | TypE)[]): Value | null {
 		if (texti)
@@ -165,7 +179,7 @@ export class Value implements Value {
 			if (end == text.length - 1 && end > 0)
 				text = text.substring(1, end)
 			else
-				break;
+				break
 		} while (true)
 		if (text == "" || /^(global|local)\b/.test(text) || (!/^(["']|new)/.test(text) && /\w[\n\s]+\w/.test(text))) return null
 		if (type != undefined) {
@@ -202,7 +216,7 @@ export class Value implements Value {
 			return a
 		}
 
-		var ret: Value | null = null;
+		var ret: Value | null = null
 
 		this.parseables.find((v) => { if (v.parse != Value.parse) ret = v.parse(text, global, local); return ret })
 		return ret
@@ -237,9 +251,9 @@ export class Func {
 export class Variable implements Value {
 	const = false
 	isValue = Value.isValue
-	type: Type;
+	type: Type
 	comments: Comment[] = [];
-	pointer: string | number;
+	pointer: string | number
 	global = true
 	name = "a"
 	static playerVars = "A"
@@ -261,7 +275,7 @@ export class Variable implements Value {
 	}
 
 	static parse(text: string, global: VariableBlock, local?: VariableBlock, type?: Type | TypE): Variable | null {
-		var m = /^[\s\n]*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*)[\s\n]*$/u.exec(text)
+		var m = /^[\s\n]*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_0-9]*)[\s\n]*$/u.exec(text)
 		var v: Variable | undefined
 		if (m && m.groups) {
 			if (local)
@@ -279,13 +293,13 @@ export class Variable implements Value {
 	}
 }
 export class AbstractValue extends Value {
-	value: any;
+	value: any
 	array: boolean = false;
 	comments: Comment[] = [];
 
 	constructor(comments?: Comment[], v?: any) {
 		super()
-		this.comments = comments || [];
+		this.comments = comments || []
 		this.value = v
 	}
 	toString(global: boolean = true) {
@@ -295,8 +309,11 @@ export class AbstractValue extends Value {
 
 export class Prop extends AbstractValue {
 	lines = 1
+	ret = true;
 	static array = false;
-	static type: TypE | string | Type
+	static type: TypE | string | Type | (Type | TypE | string)[]
+	static retType: TypE | string | Type | (Type | TypE | string)[]
+	static optReturn: string | null
 	set const(v) { }
 	get const() {
 		return this.value instanceof Array ? this.value.every((v) => v.const) : this.value.const
@@ -304,13 +321,51 @@ export class Prop extends AbstractValue {
 	getArray() {
 		return this.value instanceof Array ? this.value[0].getArray() : this.value.getArray()
 	}
+	public get types(): Type[] {
+		let t = (<typeof Prop>this.constructor).type
+		let array = (t instanceof Array) ? t : [t]
+		let ts: Type[] = []
+		array.forEach((t) => {
 
+			if (Type.instance(t))
+				ts.push(t as Type)
+			if (_.values(TypE).includes(<TypE>t))
+				ts.push(Type.get((<typeof Prop>this.constructor).type as TypE))
+			var v = this.value instanceof Array ? this.value[0] : this.value
+			while (/-t/.test(t as string) && v.value) {
+				t = (t as string).substring(1)
+				v = v.value instanceof Array ? this.value[0] : this.value
+			}
+			if (v && v.type)
+				ts.push(v.type)
+			return Type.get(TypE.undefined)
+			//	throw "help" 
+		})
+		return ts
+	}
 	public get type(): Type {
 		let t = (<typeof Prop>this.constructor).type
 		if (Type.instance(t))
 			return t as Type
 		if (_.values(TypE).includes(<TypE>t))
 			return Type.get((<typeof Prop>this.constructor).type as TypE)
+		var v = this.value instanceof Array ? this.value[0] : this.value
+		while (/-t/.test(t as string) && v.value) {
+			t = (t as string).substring(1)
+			v = v.value instanceof Array ? this.value[0] : this.value
+		}
+		if (v && v.type)
+			return v.type
+		//	throw "help"
+		return Type.get(TypE.undefined)
+
+	}
+	public get rettype(): Type {
+		let t = (<typeof Prop>this.constructor).retType
+		if (Type.instance(t))
+			return t as Type
+		if (_.values(TypE).includes(<TypE>t))
+			return Type.get(t as TypE)
 		var v = this.value instanceof Array ? this.value[0] : this.value
 		while (/-t/.test(t as string) && v.value) {
 			t = (t as string).substring(1)
@@ -335,19 +390,16 @@ export class Prop extends AbstractValue {
 	static params: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = []
 	constructor(comments?: Comment[], v?: any) {
 		super()
-		this.comments = comments || [];
+		this.comments = comments || []
 		this.value = v
 	}
 
-	static parse(text: string, global: VariableBlock, local?: VariableBlock, type: Type | TypE = TypE.undefined, set = false): Prop | null {
+	static parse(text: string, global: VariableBlock, local?: VariableBlock, type: Type | TypE = TypE.undefined, access = PropType.get): Prop | null {
 		text = text.replace(/[\s\n]*/g, "")
 		let test = splitWP(text, /[",+\-*/\^&|]/).length == 1
 		var arr = splitWP(text, /\./)
 		arr = test ? arr : []
-		if (typeof type == "string")
-			if (Type.has(type))
-				type = Type.get(type)
-			else return null
+		type = Type.as(type)
 		var val = null
 		if (arr.length >= 2)
 			val = Value.parse(arr.slice(0, arr.length - 1).join("."), global, local)
@@ -356,8 +408,8 @@ export class Prop extends AbstractValue {
 			arr[1] = arr[0]
 		}
 		if (val && val.type) {
-			var prop = val.type.props.get(arr[arr.length - 1].split("(", 1)[0])
-			if (prop && (!set || prop.access)) {
+			var prop = val.type.get(arr[arr.length - 1].split("(", 1)[0])
+			if (prop && (access & prop.access)) {
 				if (prop.params.length > 0) {
 					if (arr[arr.length - 1].endsWith(")") && arr[arr.length - 1].includes("(")) {
 						let params = (arr[arr.length - 1].match(/[^]*?\(([^]*?)\)$/) as RegExpMatchArray)[1]
@@ -365,11 +417,11 @@ export class Prop extends AbstractValue {
 						let props: (Value | null)[] = []
 						let ind = 0
 						for (let index = 0; index < prop.params.length; index++) {
-							const v: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]) = prop.params[index];
+							const v: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]) = prop.params[index]
 							let l: Value | null = null
 							if (v instanceof Array) {
 								for (let i = 0; i < v.length && !l; i++) {
-									const e: any = v[i];
+									const e: any = v[i]
 									if (typeof e == "function") {
 										l = e(val, arr2[ind] || "", global, local as VariableBlock)
 										if (l) ind++
@@ -389,10 +441,10 @@ export class Prop extends AbstractValue {
 													if (val.type instanceof ArrayType)
 														l = Value.parse(arr2[ind] || "", global, local, (<ArrayType>(val).type).type)
 													if (l) ind++
-													break;
+													break
 												case "v":
 													l = val
-													break;
+													break
 											}
 										}
 								}
@@ -412,10 +464,10 @@ export class Prop extends AbstractValue {
 										case "-[]":
 											if (val.type instanceof ArrayType)
 												l = Value.parse(arr2[ind++] || "", global, local, (<ArrayType>(val).type).type)
-											break;
+											break
 										case "v":
 											l = val
-											break;
+											break
 									}
 								}
 							if (!l)
@@ -429,15 +481,18 @@ export class Prop extends AbstractValue {
 					}
 					return null
 				}
-				return new prop([], val)
-
+				let value = new prop([], val)
+				if (value.rettype == type)
+					value.ret = true
+				if (type == Type.undefined || value.type == type || value.rettype == type)
+					return value
 			}
 		}
 
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", set: Value | null | boolean = null, mod = "") {
+	toString(global: boolean = true, indent = "", stack: string[] = [], set: Value | null | boolean = null, mod = "") {
 		let n = set ? (mod ? this.modifier || "" : this.setter || "") : this.getter
 		if (typeof n == "function")
 			var name = n(this.value, global, indent)
@@ -527,10 +582,10 @@ export class Class extends AbstractValue {
 	}
 
 	static parse(text: string, global: VariableBlock, local?: VariableBlock): Value | null {
-		var m = /^new\s*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*)[\s]*(\((?<params>[^]*?)\))?$/u.exec(text)
+		var m = /^new\s*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_0-9]*)[\s]*(\((?<params>[^]*?)\))?$/u.exec(text)
 		if (m && m.groups) {
 			let name = m.groups.name
-			var paramS = splitWP(m.groups.params, /,/);
+			var paramS = splitWP(m.groups.params, /,/)
 			let keys = _.filter(
 				Array.from(this.classes.keys()),
 				(key) => Number.parseInt(key.substring(name.length)) > paramS.length
@@ -542,7 +597,7 @@ export class Class extends AbstractValue {
 							(entry) => entry.defaults.length > 0)))
 			if (c) {
 				for (let index = 0; index < c.length; index++) {
-					const element = c[index];
+					const element = c[index]
 
 					let types = element.types
 					let params: (Value | null | string | boolean)[] = _.map(types, (t, i) => Value.parse(paramS[i], global, local, t))
@@ -701,7 +756,7 @@ export class StringConst extends AbstractValue {
 				let jumpbackI = []
 				let jumpbackJ = []
 				for (let i = 0; i < a.length; i += 2) {
-					let t;
+					let t
 					for (let j = 0; !t; j += 2) {
 						if (j >= this.maxSpace * 2 || i + j == a.length) {
 							i = jumpbackI.pop() as number
@@ -715,7 +770,7 @@ export class StringConst extends AbstractValue {
 							jumpbackI.push(i)
 							jumpbackJ.push(j)
 							i += j
-							break;
+							break
 						} else {
 							if (i + j + 1 > a.length)
 								break
@@ -1005,7 +1060,7 @@ export class VectorOp extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true): string {
+	toString(global: boolean = true, any?: any, stack = []): string {
 		if (this.operator.includes("$"))
 			return this.operator.replace(/\$p(\d+)\$/g, (a, b) => { return (this.values[parseFloat(b)] || "Null").toString(global) })
 		return this.operator + "(" + this.values[0].toString(global) + ", " + this.values[1].toString(global) + ")"
@@ -1090,12 +1145,12 @@ export class BoolOp extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", cond = false): string {
+	toString(global: boolean = true, indent = "", stack = [], cond = false): string {
 		if (cond)
 			if (this.operator == boolOp.not)
-				return this.values[0].toString() + " == False"
+				return this.values[0].toString(global, indent, stack) + " == False"
 			else
-				return this.toString(global) + " == True"
+				return this.toString(global, indent, stack) + " == True"
 		switch (this.operator) {
 			case boolOp.and:
 				return "And(" + this.values[0].toString(global) + ", " + this.values[1].toString(global) + ")"
@@ -1120,7 +1175,7 @@ export class BoolOp extends AbstractValue {
 					[new BoolOp(undefined, boolOp.nand, [this.values[0], this.values[1]]),
 					new BoolOp(undefined, boolOp.or, [this.values[0], this.values[1]])]).toString(global)
 			default:
-				return "False";
+				return "False"
 		}
 	}
 }
@@ -1174,7 +1229,7 @@ export class Comp extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", cond = false) {
+	toString(global: boolean = true, indent = "", stack = [], cond = false) {
 		if (cond)
 			return this.value1.toString(global) + " " + this.condition + " " + this.value2.toString(global)
 		else return "Compare(" + this.value1.toString(global) + ", " + this.condition + ", " + this.value2.toString(global) + ")"
@@ -1199,7 +1254,7 @@ export class BoolConst extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", con = false) {
+	toString(global: boolean = true, indent = "", stack = [], con = false) {
 		if (con)
 			if (this.value)
 				return "True == True"
@@ -1223,7 +1278,7 @@ export enum PlayerE {
 
 
 export class PlayerConst extends AbstractValue {
-	value: PlayerE;
+	value: PlayerE
 	static typE = TypE.playerConst
 	typE = Type.get(PlayerConst.typE)
 	constructor(comments?: Comment[], player?: PlayerE) {
@@ -1333,7 +1388,7 @@ export class PlayerConst extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", event = false): string {
+	toString(global: boolean = true, indent = "", stack = [], event = false): string {
 		if (event)
 			return this.value
 		//TODO observe behavior in FFA
@@ -1363,7 +1418,7 @@ export enum TeamE {
 }
 
 export class TeamConst extends AbstractValue {
-	value: any;
+	value: any
 	static typE = TypE.teamConst
 	typE = Type.get(TeamConst.typE)
 	constructor(comments?: Comment[], team?: TeamE) {
@@ -1389,7 +1444,7 @@ export class TeamConst extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", event?: boolean): string {
+	toString(): string {
 		return this.value
 	}
 }
@@ -1544,6 +1599,9 @@ export class Type {
 	defau: Value | null | string
 	static boolables: (Type | TypE)[] = [TypE.player, TypE.number]
 	props: Properties
+	get(key: string, array = false): typeof Prop | undefined {
+		return this.props.get(key, array)
+	}
 	modifiers: string[] = []
 	static get undefined(): Type {
 		return Type.get(TypE.undefined)
@@ -1552,17 +1610,17 @@ export class Type {
 	op(op: string): string {
 		switch (op) {
 			case "+":
-				return "Add";
+				return "Add"
 			case "/":
-				return "Divide";
+				return "Divide"
 			case "%":
-				return "Modulo";
+				return "Modulo"
 			case "*":
-				return "Multiply";
+				return "Multiply"
 			case "^":
-				return "Raise To Power";
+				return "Raise To Power"
 			case "-":
-				return "Subtract";
+				return "Subtract"
 
 			default:
 				return op
@@ -1612,7 +1670,7 @@ export class Type {
 			_.each(_.pairs(TypE), (v) => { if ((v[1] as string) == text) value = Type.get(v[1]) })
 		}
 		if (value == undefined)
-			throw new SynErr(0, text.length, DiagnosticSeverity.Error, "'" + text + "' is not a Valid Type");
+			throw new SynErr(0, text.length, DiagnosticSeverity.Error, "'" + text + "' is not a Valid Type")
 		return value
 	}
 
@@ -1642,10 +1700,14 @@ export class ArrayType extends Type {
 	public set translation(v: string) { }
 	values: (typeof Value)[] = [];
 	public get props(): Properties {
-		return super.props.array;
+		return this.type.props.array
 	}
+	public set props(v) { };
 
-	invProps: { type: TypE; name: string; }[] = [];
+	get(key: string, array = true): typeof Prop | undefined {
+		return this.type.props.get(key, array)
+	}
+	invProps: { type: TypE; name: string }[] = [];
 	public equals(obj: Object): boolean {
 		return obj.toString() == this.toString()
 	}
@@ -1662,11 +1724,15 @@ export class ArrayType extends Type {
 }
 
 Type.types = new Map([
+	toType(TypE.abilities, [], [
+		toProp("1", "1", TypE.ability),
+		toProp("2", "2", TypE.ability)], false),
 	toType(TypE.ability, [], [
 		toProp("enable", "Set Ability $v$ Enabled($--v$, True)", TypE.void),
 		toProp("disable", "Set Ability $v$ Enabled($--v$, False)", TypE.void)], false),
 	toType(TypE.button, [], [
 		toProp("enable", "Allow Button($--v$, $v$)", TypE.void),
+		//TODO: disable
 		toProp("disable", "Set Ability $v$ Enabled($--v$, False)", TypE.void)], false),
 	toType(TypE.color, false),
 	toType(TypE.hero, [], [
@@ -1675,7 +1741,6 @@ Type.types = new Map([
 	toType(TypE.playerConst, [PlayerConst], [], false, "Player Constant"),
 	toType(TypE.longVisualEffect, false), toType(TypE.longAudibleEffect, false),
 	toType(TypE.icon, false), toType(TypE.space, false), toType(TypE.hudLocation, false),
-	toType(TypE.abilities, [], [toProp("2", "2", TypE.ability)], false),
 	toType(TypE.shortVisualEffect, false), toType(TypE.shortAudibleEffect, false),
 	toType(TypE.status, false),
 	toType(TypE.string, [StringConst], false, "String Constant"), toType(TypE.communicate, false),
@@ -1740,7 +1805,7 @@ Type.types = new Map([
 	toType(TypE.game, [], [
 		toProp("draw", "Declare Match Draw()", TypE.void),
 		toProp("assemble", "Go To Assemble Heroes()", TypE.void),
-		toProp("pauseTime","Pause Match Time()"),
+		toProp("pauseTime", "Pause Match Time()"),
 
 		toProp("destroyEffects", "Destroy All Effects()"),
 		toProp("destroyHUD", "Destroy All HUD Text()"),
@@ -1753,9 +1818,15 @@ Type.types = new Map([
 		toProp("enableCompletion", "$p0|Enable Built-In Game Mode Completion|Disable Built-In Game Mode Completion()", TypE.void, [TypE.bool]),
 		toProp("enableMusic", "$p0|Enable Built-In Game Mode Music|Disable Built-In Game Mode Music()", TypE.void, [TypE.bool]),
 		toProp("enableScoring", "$p0|Enable Built-In Game Mode Scoring|Disable Built-In Game Mode Scoring()", TypE.void, [TypE.bool]),
+		toProp("matchTime", [null, "Set Match Time($v$, $s$)"], TypE.number),
+
+		toProp("slowMotion", [null, "Set Slow Motion($s$)"], TypE.number),
+
 	], false),
 	toType(TypE.player, [], [
-		toProp("abilities", "abilities", TypE.abilities),
+		arProp("abilities", "abilities", TypE.abilities),
+		arProp("accelerate", "Start Accelerating($p$)", TypE.void, ["v", TypE.vector, TypE.number, TypE.number]),
+		arProp("aimSpeed", [null, "Set Aim Speed($v$, $s$)"], TypE.number),
 		toProp("alive", "Is Alive($v$)", TypE.bool),
 		toProp("applyImpulse", "Apply Impules($p0$, $p1$, $p2$, $p3|To World|To Player$, $p4|Cancel Contrary Motion|Incorporate Contrary Motion$)", TypE.void, ["v", TypE.vector, TypE.number, TypE.bool, TypE.bool]),
 		toProp("communicate", "Communicate($p$)", TypE.void, ["v", [TypE.emote, TypE.voiceLine, TypE.communicate]]),
@@ -1769,20 +1840,43 @@ Type.types = new Map([
 		arProp("enableRespawn", "$p1|Enable Built-In Game Mode Respawning|Disable Built-In Game Mode Respawning$($p0$)", TypE.void, ["v", TypE.bool]),
 		arProp("enableButton", "$p2|Allow Button|Disallow Button$($p0$, $p1$)", TypE.void, ["v", TypE.button, TypE.bool]),
 		toProp("exists", "Entity Exists($v$)", TypE.bool),
+		arProp("face", "Set Facing($p0$, $p1$, $p2|To World|To Player$)", TypE.void, ["v", TypE.vector, TypE.bool]),
+		arProp("gravity", [null, "Set Gravity($v$, $s$)"], TypE.number),
 		arProp("heal", "Heal($p0$, $p2$, $p1$)", TypE.void, ["v", TypE.number, [TypE.null, TypE.player]]),
-		arProp("kill", "Kill($p0$, $p1$)", TypE.void, ["v", [TypE.null, TypE.player]]),
+		arProp("healGive", [null, "Set Healing Dealt($v$, $s$)"], TypE.number),
+		arProp("healReceive", [null, "Set Healing Received"], TypE.number),
+		arProp("heroes", [null, "Set Player Allowed Heroes($v$, $s$)"], [TypE.hero, new ArrayType(TypE.hero)]),
 		toProp("holding", ["Is Button Held($p$)"], TypE.bool, ["v", TypE.button]),
+		arProp("invisible", "Set Invisible($v$, All)"),
+		arProp("invisibleTo", [null, "Set Invisible($v$, $s$)"], TypE.side),
+		arProp("kill", "Kill($p0$, $p1$)", TypE.void, ["v", [TypE.null, TypE.player]]),
+		arProp("maxHealth", [null, "Set Max Health($v$, $s$)"], TypE.number),
+		arProp("objective", [null, "Set Objective Description($v$, $s$, String)"], TypE.string),
 		toProp("position", "Position Of($v$)", TypE.vector),
-		arProp("preLoadHero","Preload Hero($p$)",TypE.void,["v", TypE.hero]),
-		arProp("pressButton","Press Button",TypE.void,["v",TypE.button]),
+		arProp("preLoadHero", "Preload Hero($p$)", TypE.void, ["v", TypE.hero]),
+		arProp("pressButton", "Press Button", TypE.void, ["v", TypE.button]),
+		arProp("primaryFire", [null, "Set Primary Fire Enabled($v$, $s$)"], TypE.bool),
+		arProp("projectileGravity", [null, "Set Projectile Gravity($v$, $s$)"], TypE.number),
+		arProp("projectileSpeed", [null, "Set Projectile Speed($v$, $s$)"], TypE.number),
 		toProp("rayCast", ["Ray Cast Hit Player(Eye Position($p0$), Add(Multiply($p1$, Facing Direction Of($p0$)), Eye Position($p0$))"], TypE.player, ["v", TypE.number, [TypE.player, new ArrayType(TypE.player)]]),
-		arProp("resetHerosAvalible","Reset Player Hero Availability($v$)"),
-		arProp("respawn","Respawn($v$)"),
-		arProp("resurrect","Resurrect($v$)"),
+		arProp("resetHerosAvalible", "Reset Player Hero Availability($v$)"),
+		arProp("respawn", "Respawn($v$)"),
+		arProp("respawnTime", [null, "Set Respawn Max Time($v$, $s$)"], TypE.number),
+		arProp("resurrect", "Resurrect($v$)"),
 		toProp("score", ["Score Of($v$)", "Set Player Score($v$, $s$)", "Modify Player Score($v$, $s$)"], TypE.number, [], "+"),
-		toProp("setStatus", ["Set Status($p$)"], TypE.bool, ["v", TypE.status, TypE.number]),
+		arProp("secondaryFire", [null, "Set Secondary Fire Enabled($v$, $s$)"], TypE.bool),
+		arProp("setStatus", "Set Status($p0$, $p3$, $p1$, $p2$)", TypE.void, ["v", TypE.status, TypE.number, TypE.player]),
+		arProp("speed", [null, "Set Move Speed($v$, $s$)"], TypE.number),
+		arProp("startCamera", "Start Camera($p$)", TypE.void, ["v", TypE.vectory, TypE.vectory, TypE.number]),
+		arProp("startDamageMod", "Start Damage Modification($p0$, $p1$, $p2$, $p3|Receivers, Damagers, And Damage Percent|None$, )", TypE.void, ["v", TypE.playery, TypE.number, TypE.bool], undefined, undefined, "Last Damage Modification ID()", TypE.damageModification),
+		arProp("strength", [null, "Set Damage Dealt($v$, $s$)"], TypE.number),
+		arProp("updatingObjective", [null, "Set Objective Description($v$, $s$, Visible To and String)"], TypE.string),
+		arProp("ultimate", [null, "Set Ultimate Ability Enabled($v$, $s$)"], TypE.bool),
+		arProp("ultimateCharge", [null, "Set Ultimate Charge($v$, $s$)"], TypE.number),
 		toProp("vertFacingAngle", "Vertical Facing Angle Of($v$)", TypE.number),
-		toProp("victory", "Declare Player Victory($v$)")
+		toProp("victory", "Declare Player Victory($v$)"),
+		arProp("visible", "Set Invisible($v$, None)"),
+		arProp("weakness", [null, "Set Damage Received($v$, $s$)"], TypE.number),
 	], [toProp("score", [null, "Set Player Score($v$, $s$)", "Modify Player Score($v$, $s$)"], TypE.number, [], "+")], true, undefined, undefined, "event.player"),
 	toType(TypE.null, undefined, undefined, undefined, "null"),
 ])
@@ -1813,7 +1907,7 @@ class ConstValue extends AbstractValue {
 				let name: string
 				let value: string
 				if (typeof v == "string") {
-					value = v;
+					value = v
 					t = type
 					name = toCamelSep(v)
 				} else {
@@ -1836,13 +1930,13 @@ class ConstValue extends AbstractValue {
 				}
 				this.map.set((base == "" ? "" : base + ".") + value, new ConstValue([], name, t, translation))
 
-			});
+			})
 		} else {
-			let t = Type.as(valueP as any);
+			let t = Type.as(valueP as any)
 			let name: string
 			let value: string
 			if (typeof base == "string") {
-				value = base;
+				value = base
 				name = toCamelSep(base)
 			} else {
 				value = base[0]
@@ -1854,7 +1948,7 @@ class ConstValue extends AbstractValue {
 	}
 
 	static parse(text: string, ...args: any[]): Value | null {
-		if (!/^([\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}.]*)$/u.test(text))
+		if (!/^([\p{Alphabetic}_][\p{Alphabetic}_0-9.]*)$/u.test(text))
 			return null
 		let v = ConstValue.map.get(text)
 		if (v)
@@ -1878,6 +1972,9 @@ class ConstValue extends AbstractValue {
 Value.parseables = [BoolConst, NumConst, NumOp, BoolOp, PlayerConst, TeamConst, ConstValue, Comp, StringConst, Variable, Prop, Class, ArrayConst, ArrayAccess, VectorConst, VectorOp]
 Class.add("BigMessage", ["Big Message(All Players(All Teams), $p$)", [TypE.string]])
 Class.add("BigMessage", ["Big Message($p1$, $p0$)", [TypE.string, new ArrayType(TypE.player)]])
+
+Class.add("SmallMessage", ["Small Message(All Players(All Teams), $p$)", [TypE.string]])
+Class.add("SmallMessage", ["Small Message($p1$, $p0$)", [TypE.string, new ArrayType(TypE.player)]])
 
 Class.add("Effect", ["Create Effect(All Players(All Teams), $p$, 1, None)", [[TypE.longVisualEffect, TypE.longAudibleEffect], TypE.color, [TypE.vector, TypE.player]]])
 Class.add("Effect", ["Create Effect($p3$, $p0$, $p1$, $p2$, 1, None)", [[TypE.longVisualEffect, TypE.longAudibleEffect], TypE.color, [TypE.vector, TypE.player], [TypE.player, new ArrayType(TypE.player)]]])
@@ -1914,6 +2011,7 @@ ConstValue.add("vfx.l", ["badAura", "cloud", "goodAura", "lightShaft", "orb", "r
 ConstValue.add("vfx.s", ["badExplosion", "badPickupEffect", "goodExplosion", "goodPickupEffect", "ringExplosion"], TypE.shortVisualEffect)
 //ConstValue.add("sfx.l", ["badAura", "cloud", "goodAura", "lightShaft", "orb", "ring", "sparkles", "sphere"], TypE.longAudibleEffect)
 ConstValue.add("sfx.s", ["buffExplosion", "buffImpact", "debuffImpact", "explosion", "ringExplosion"], TypE.shortAudibleEffect)
+ConstValue.add("side", ["all", "none", "team"], TypE.side)
 ConstValue.add("world", TypE.world)
 ConstValue.add("button", ["ability1", "ability2", "crouch", "interact", "jump", "primaryFire", "secondaryFire", "ultimate"], TypE.button)
 ConstValue.add("hero", ["ana", "ashe", "baptiste", "bastion", "brigitte", ["dva", "D.VA"], "doomfist", "genji", "hanzo", "junkrat", "lúcio", ["lucio", "Lúcio"], "mccree", "mei", "mercy", "moira", "orisa", "pharah", "reaper", "reinhardt", "roadhog", "sigma", ["soldier76", "Soldier: 76"], "sombra", "symmetra", "torbjörn", ["torbjorn", "torbjörn"], "tracer", "widowmaker", "winston", "wreckingBall", "zarya", "zenyatta"], TypE.hero, "Hero($v$)")
@@ -1922,5 +2020,4 @@ ConstValue.add("communicate", ["acknowledge", ["group", "Group Up"], "hello", ["
 ConstValue.add("emote", [["down", "EMOTE DOWN"], ["left", "EMOTE LEFT"], ["right", "EMOTE RIGHT"], ["up", "EMOTE UP"]], TypE.emote)
 ConstValue.add("voice", [["down", "VOICE LINE DOWN"], ["left", "VOICE LINE LEFT"], ["right", "VOICE LINE RIGHT"], ["up", "VOICE LINE UP"]], TypE.voiceLine)
 ConstValue.add("icon", [["down", "Arrow: Down"], ["left", "Arrow: Left"], ["right", "Arrow: Right"], ["up", "Arrow: Up"], "asterisk", "bolt", "checkmark", "circle", "club", "diamond", "dizzy", ["exclamation", "Exclamation Mark"], "eye", "fire", "flag", "halo", "happy", "heart", "moon", "no", "plus", "poison", "poison2", ["question", "Question Mark"], "radioactive", "recycle", "ringThick", "ringThin", "sad", "skull", "spade", "spiral", "stop", "trashcan", "warning", "x"], TypE.icon)
-
 ConstValue.add("null", TypE.null)

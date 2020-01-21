@@ -133,7 +133,7 @@ function parseParams(text: string, types: (Type | TypE | TypE[] | Type[]), cb: (
 
 
 function parseEvent(text: string, cb: (event: EventObj | null, length: number, errors: SynErr[]) => void) {
-	let match = /^([\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*)([\s\r\n]*\()([^]*?)\)/u.exec(text)
+	let match = /^([\p{Alphabetic}_][\p{Alphabetic}_0-9]*)([\s\r\n]*\()([^]*?)\)/u.exec(text)
 	if (match == null) {
 		if (/^(\/\/|\s|,|;|\/\*)/.exec(text))
 			return

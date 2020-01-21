@@ -1,9 +1,9 @@
-import { Value, NumConst, Type, Variable, TypE, BoolOp, boolOp, Prop } from './types';
-import { DiagnosticSeverity } from 'vscode-languageserver';
-import { localRuleInd } from './build';
-import _ = require('underscore');
-import { VariableBlock, SynErr, Comment, BlockComment } from './typeUtil';
-import { findParan, findEnd, splitWP, splitWPToken } from './helper';
+import { Value, NumConst, Type, Variable, TypE, BoolOp, boolOp, Prop, PropType } from './types'
+import { DiagnosticSeverity } from 'vscode-languageserver'
+import { localRuleInd } from './build'
+import _ = require('underscore')
+import { VariableBlock, SynErr, Comment, BlockComment } from './typeUtil'
+import { findParan, findEnd, splitWP, splitWPToken } from './helper'
 
 export interface Action {
 	disabled: boolean
@@ -35,11 +35,11 @@ export class Action {
 		while (lines.length > 0 && (/(["',+\-*/\^&=|]|\bglobal)\s*$/.test(lwoc(line)) || /^\s*["',+\-*/\^&=|]/.test(lwoc((_.find(lines, (v, i, list) => /^\S/.test(lwoc(v)) || list.length - 1 == i) as string))))) {
 			line += "\n" + lines.shift()
 		}
-		let ass: { action: Action | null; length: number; errors: SynErr[]; } | null = null // f(text.split(/[;}]|$/, 1)[0] || "")
-		let comms: { comment: Comment; length: number; }[] = []
+		let ass: { action: Action | null; length: number; errors: SynErr[] } | null = null // f(text.split(/[;}]|$/, 1)[0] || "")
+		let comms: { comment: Comment; length: number }[] = []
 		try {
 			let t = line.replace(/(\/\/[^]*?(\n|$))|(\/\*[^]*?\*\/)/g, (a) => {
-				let c = Comment.parse(a) as { comment: Comment; length: number; }
+				let c = Comment.parse(a) as { comment: Comment; length: number }
 				comms.push(c)
 				return a.substr(c.length)
 			}).split(/([;]|\/\/|\/\*)(?=[^}]*$)/, 1)[0] || ""
@@ -90,7 +90,7 @@ export class Action {
 			do {
 				b = false
 				try {
-					let comment = Comment.parse(text);
+					let comment = Comment.parse(text)
 					if (comment) {
 						var acc = null
 						try {
@@ -134,7 +134,7 @@ export class Action {
 					text = text.substring(error.length)
 				}
 			} while (b)
-			let m = /^[\p{Alphabetic}_\p{Decimal_Number}.()]+/u.exec(text)
+			let m = /^[\p{Alphabetic}_0-9.()]+/u.exec(text)
 			if (m) {
 				allErrors.push(new SynErr(i, m[0].length + i, DiagnosticSeverity.Error, '"' + m[0] + '" is not a valid Action'))
 				i += m[0].length
@@ -147,7 +147,7 @@ export class Action {
 					text = text.substring(s.length)
 				}
 			}
-		} while (text.length > 0);
+		} while (text.length > 0)
 
 		return { actions: actions, errors: allErrors }
 	}
@@ -180,7 +180,7 @@ export class Assignment extends Action {
 		throws: {error:SynErr, length:1}
 	*/
 	static parse(text: string, local: VariableBlock, global: VariableBlock, dec = true): { action: Action | null, length: number, errors: SynErr[] } | null {
-		let match = /^(?<dec>(?<pretype>(?<global>global|local)?[\s\n]*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*))(:(?<type>([\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*)?(\[\])*))?)((?<eq>[\s\n]*=[\s\n]*)(?<value>\S[^]*?)[\s]*)?[\s]*?($)/u.exec(text)
+		let match = /^(?<dec>(?<pretype>(?<global>global|local)?[\s\n]*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_0-9]*))(:(?<type>([\p{Alphabetic}_][\p{Alphabetic}_0-9]*)?(\[\])*))?)((?<eq>[\s\n]*=[\s\n]*)(?<value>\S[^]*?)[\s]*)?[\s]*?($)/u.exec(text)
 		if (match != null && match.groups != null) {
 			let name = match.groups.name
 			let access = match.groups.global
@@ -239,53 +239,56 @@ export class Assignment extends Action {
 			return { action: new Assignment(val, t.pointer, g), length: match[0].length, errors: [] }
 		}
 		let split = splitWP(text, /=/, 2)
-		let prop = Prop.parse(split[0], global, local, TypE.undefined, true)
-		if (split.length > 0 && split[0].length > 0)
-			if (prop) {
-				if (split.length > 1) {
-					let val = Value.parse(split[1], global, local, prop.type)
-					if (val) {
-						return { action: new Assignment(val, prop, false), length: text.length, errors: [] }
+		if (split.length > 0) {
+			if (split[0].length > 0) {
+				let prop = Prop.parse(split[0], global, local, TypE.undefined, PropType.set)
+				if (prop) {
+					if (split.length > 1) {
+						let val = Value.parse(split[1], global, local, prop.types)
+						if (val) {
+							return { action: new Assignment(val, prop, false), length: text.length, errors: [] }
+						}
 					}
+				} else {
+					let split2 = splitWP(split[0], /\./)
+					let vs = split2.slice(0, split2.length - 1).join(".")
+					let val = Value.parse(vs, global, local, TypE.playery)
+					let ts = splitWP(split2[split2.length - 1], /:/)
+					if (val && /^\s*[\p{Alphabetic}_][\p{Alphabetic}_0-9]*\s*$/u.test(ts[0]))
+						if (ts.length <= 2) {
+							if (ts.length == 2) {
+								try {
+									type = Type.parse(ts[1])
+								} catch (error) {
+									if (!(error instanceof SynErr))
+										throw error
+									error.start += vs.length + ts[0].length + 1 + (error.end == 0 ? 0 : 1)
+									error.end += vs.length + ts[0].length + 1 + 1
+									throw { error: error, length: text.length }
+								}
+							}
+							if (split.length > 1) {
+								let value = Value.parse(split[1], global, local, type)
+								if (value) {
+									if (!type)
+										type = value.type
+									//playerVariables.set(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false))
+									Type.get(TypE.player).props.add(new Variable(type, -1, ts[0].replace(/\s*/g, ""), false))
+									// Type.get(TypE.player).props.add(ts[0].replace(/\s*/g, ""), new Variable(type, -1, ts[0], false))
+									return { action: new Assignment(value, Prop.parse(vs + "." + ts[0], global, local, undefined, PropType.set) as Prop, false), length: text.length, errors: [] }
+								}
+							} else {
+								if (type) {
+									Type.get(TypE.player).props.add(new Variable(type, -1, ts[0].replace(/\s*/g, ""), false))
+									// addPlayerVar(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false), Type.get(TypE.player).props)
+									// playerVariables.set(ts[0], new Variable(type, playerVariables.inc(), ts[0], false))
+									return { action: null, length: text.length, errors: [] }
+								}
+							}
+						}
 				}
-			} else {
-				let split2 = splitWP(split[0], /\./)
-				let vs = split2.slice(0, split2.length - 1).join(".")
-				let val = Value.parse(vs, global, local, TypE.playery)
-				let ts = splitWP(split2[split2.length - 1], /:/)
-				if (val && /^\s*[\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*\s*$/u.test(ts[0]))
-					if (ts.length <= 2) {
-						if (ts.length == 2) {
-							try {
-								type = Type.parse(ts[1])
-							} catch (error) {
-								if (!(error instanceof SynErr))
-									throw error
-								error.start += vs.length + ts[0].length + 1 + (error.end == 0 ? 0 : 1)
-								error.end += vs.length + ts[0].length + 1 + 1
-								throw { error: error, length: text.length }
-							}
-						}
-						if (split.length > 1) {
-							let value = Value.parse(split[1], global, local, type)
-							if (value) {
-								if (!type)
-									type = value.type
-								//playerVariables.set(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false))
-								Type.get(TypE.player).props.add(new Variable(type, -1, ts[0].replace(/\s*/g, ""), false))
-								// Type.get(TypE.player).props.add(ts[0].replace(/\s*/g, ""), new Variable(type, -1, ts[0], false))
-								return { action: new Assignment(value, Prop.parse(vs + "." + ts[0], global, local, undefined, true) as Prop, false), length: text.length, errors: [] }
-							}
-						} else {
-							if (type) {
-								Type.get(TypE.player).props.add(new Variable(type, -1, ts[0].replace(/\s*/g, ""), false))
-								// addPlayerVar(ts[0].replace(/\s*/g, ""), new Variable(type, playerVariables.inc(), ts[0], false), Type.get(TypE.player).props)
-								// playerVariables.set(ts[0], new Variable(type, playerVariables.inc(), ts[0], false))
-								return { action: null, length: text.length, errors: [] }
-							}
-						}
-					}
 			}
+		}
 		return null
 	}
 
@@ -303,7 +306,8 @@ export class Assignment extends Action {
 		let prestring = super.toString(g, indent) + v + (this.disabled ? "disabled " : "")
 		if (!(this.index instanceof Prop))
 			return prestring + "Set " + (g || this.global ? "Global" : "Player") + " Variable At Index(" + (g || this.global ? "" : "Event Player, ") + (this.global ? "A, " + this.index : "B, " + (this.index as number + localRuleInd)) + ", " + this.value.toString(g) + ");"
-		return prestring + this.index.toString(g, indent, this.value)
+		let string = this.index.toString(g, indent, [], this.value)
+		return prestring + string
 	}
 }
 
@@ -319,7 +323,7 @@ export class Modify extends Assignment {
 		throws: {error:SynErr, length:1}
 	*/
 	static parse(text: string, local: VariableBlock, global: VariableBlock): { action: Action | null, length: number, errors: SynErr[] } | null {
-		let match = /^(?<all>(?<preval>(?<name>[\p{Alphabetic}_][\p{Alphabetic}_\p{Decimal_Number}]*)\s*(?<op>[+\-*/])\s*=\s*)(?<value>\S[^]*?))[\s]*($)/u.exec(text)
+		let match = /^(?<all>(?<preval>(?<name>[\p{Alphabetic}_][\p{Alphabetic}_0-9]*)\s*(?<op>[+\-*/])\s*=\s*)(?<value>\S[^]*?))[\s]*($)/u.exec(text)
 		if (match != null && match.groups != null) {
 			let name = match.groups.name
 			if (!(local.has(name) || global.has(name)))
@@ -349,22 +353,23 @@ export class Modify extends Assignment {
 		}
 		let split = splitWPToken(text, /(?<target>[+\-*/\^%])\s*=/, 3)
 		if (split.length > 2) {
-			let prop = Prop.parse(split[0], global, local, TypE.undefined, true)
-			if (prop) {
+			let prop = Prop.parse(split[0], global, local, TypE.undefined, PropType.sm)
+			if (prop?.modifier) {
 				if (prop.modifiers.includes(split[1])) {
 					let val = Value.parse(split[2], global, local, prop.type)
 					if (val)
 						return { action: new Modify(val, prop, false, split[1]), errors: [], length: text.length }
-				} else if (split[1] == "-" && prop.modifiers.includes("+")) {
+				}
+				if (split[1] == "-" && prop.modifiers.includes("+")) {
 					let val = Value.parse("(-1)*" + split[2], global, local, prop.type)
 					if (val)
 						return { action: new Modify(val, prop, false, "+"), errors: [], length: text.length }
 				}
-				else if (prop.setter) {
-					let val = Value.parse(split.join(""), global, local, prop.type)
-					if (val) {
-						return { action: new Assignment(val, prop, false), length: text.length, errors: [] }
-					}
+			}
+			if (prop?.setter && prop?.getter) {
+				let val = Value.parse(split.join(""), global, local, prop.type)
+				if (val) {
+					return { action: new Assignment(val, prop, false), length: text.length, errors: [] }
 				}
 			}
 		}
@@ -386,7 +391,7 @@ export class Modify extends Assignment {
 		if (!(this.index instanceof Prop))
 			return prestring + "Modify " + (g || this.global ? "Global" : "Player") + " Variable At Index(" + (this.global ? "A, " + this.index : "B, " + (this.index as number + localRuleInd)) + ", " + this.value.type.op(this.operation) + ", " + this.value.toString(g) + ");"
 		//	Modify Global Variable At Index(A, 0, Append To Array, Event Player);
-		return prestring + this.index.toString(g, indent, this.value, this.operation)
+		return prestring + this.index.toString(g, indent, todo, this.value, this.operation)
 	}
 }
 
