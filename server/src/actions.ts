@@ -1,9 +1,9 @@
-import { Value, NumConst, Type, Variable, TypE, BoolOp, boolOp, Prop, PropType } from './types'
-import { DiagnosticSeverity } from 'vscode-languageserver'
-import { localRuleInd } from './build'
-import _ = require('underscore')
-import { VariableBlock, SynErr, Comment, BlockComment } from './typeUtil'
-import { findParan, findEnd, splitWP, splitWPToken } from './helper'
+import { Value, NumConst, Type, Variable, TypE, BoolOp, boolOp, Prop, PropType } from './types';
+import { DiagnosticSeverity } from 'vscode-languageserver';
+import { localRuleInd } from './build';
+import _ = require('underscore');
+import { VariableBlock, SynErr, Comment, BlockComment } from './typeUtil';
+import { findParan, findEnd, splitWP, splitWPToken } from './helper';
 
 export interface Action {
 	disabled: boolean
@@ -35,11 +35,11 @@ export class Action {
 		while (lines.length > 0 && (/(["',+\-*/\^&=|]|\bglobal)\s*$/.test(lwoc(line)) || /^\s*["',+\-*/\^&=|]/.test(lwoc((_.find(lines, (v, i, list) => /^\S/.test(lwoc(v)) || list.length - 1 == i) as string))))) {
 			line += "\n" + lines.shift()
 		}
-		let ass: { action: Action | null; length: number; errors: SynErr[] } | null = null // f(text.split(/[;}]|$/, 1)[0] || "")
-		let comms: { comment: Comment; length: number }[] = []
+		let ass: { action: Action | null; length: number; errors: SynErr[]; } | null = null // f(text.split(/[;}]|$/, 1)[0] || "")
+		let comms: { comment: Comment; length: number; }[] = []
 		try {
 			let t = line.replace(/(\/\/[^]*?(\n|$))|(\/\*[^]*?\*\/)/g, (a) => {
-				let c = Comment.parse(a) as { comment: Comment; length: number }
+				let c = Comment.parse(a) as { comment: Comment; length: number; }
 				comms.push(c)
 				return a.substr(c.length)
 			}).split(/([;]|\/\/|\/\*)(?=[^}]*$)/, 1)[0] || ""
@@ -90,7 +90,7 @@ export class Action {
 			do {
 				b = false
 				try {
-					let comment = Comment.parse(text)
+					let comment = Comment.parse(text);
 					if (comment) {
 						var acc = null
 						try {
@@ -147,7 +147,7 @@ export class Action {
 					text = text.substring(s.length)
 				}
 			}
-		} while (text.length > 0)
+		} while (text.length > 0);
 
 		return { actions: actions, errors: allErrors }
 	}
@@ -306,8 +306,7 @@ export class Assignment extends Action {
 		let prestring = super.toString(g, indent) + v + (this.disabled ? "disabled " : "")
 		if (!(this.index instanceof Prop))
 			return prestring + "Set " + (g || this.global ? "Global" : "Player") + " Variable At Index(" + (g || this.global ? "" : "Event Player, ") + (this.global ? "A, " + this.index : "B, " + (this.index as number + localRuleInd)) + ", " + this.value.toString(g) + ");"
-		let string = this.index.toString(g, indent, [], this.value)
-		return prestring + string
+		return prestring + this.index.toString(g, indent, this.value)
 	}
 }
 
@@ -391,7 +390,7 @@ export class Modify extends Assignment {
 		if (!(this.index instanceof Prop))
 			return prestring + "Modify " + (g || this.global ? "Global" : "Player") + " Variable At Index(" + (this.global ? "A, " + this.index : "B, " + (this.index as number + localRuleInd)) + ", " + this.value.type.op(this.operation) + ", " + this.value.toString(g) + ");"
 		//	Modify Global Variable At Index(A, 0, Append To Array, Event Player);
-		return prestring + this.index.toString(g, indent, todo, this.value, this.operation)
+		return prestring + this.index.toString(g, indent, this.value, this.operation)
 	}
 }
 

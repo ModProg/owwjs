@@ -1,8 +1,8 @@
-import _ = require('underscore')
-import { toCamelSep, splitWP, trueForAny, trueForEach, toTitle, findEnd, returnEnd, splitWPToken, findParan, Elem } from './helper'
-import { VariableBlock, Comment, SynErr, Properties } from './typeUtil'
-import { localRuleInd } from './build'
-import { DiagnosticSeverity } from 'vscode-languageserver'
+import _ = require('underscore');
+import { toCamelSep, splitWP, trueForAny, trueForEach, toTitle, findEnd, returnEnd, splitWPToken, findParan, Elem } from './helper';
+import { VariableBlock, Comment, SynErr, Properties } from './typeUtil';
+import { localRuleInd } from './build';
+import { DiagnosticSeverity } from 'vscode-languageserver';
 
 function toType(name: TypE, saveAble?: boolean, translation?: string, modifier?: string[] | string, def?: Value | string): [string, Type]
 function toType(name: TypE, values: typeof Value[], saveAble?: boolean, translation?: string, modifier?: string[] | string, def?: Value | string): [string, Type]
@@ -38,8 +38,8 @@ function toType(name: TypE, sa_va_va_va?: typeof Value[] | boolean, tr_sa_pr_pr?
 				arrayProps = mod_tr_sa_ap as [string, typeof Prop][]
 				saveAble = def_mod_tr_sa as boolean | undefined
 				translation = _def_mod_tr as string | undefined
-				modifiers = __def_mod as (string | string[] | undefined)
-				defau = def
+				modifiers = __def_mod as (string | string[] | undefined);
+				defau = def;
 			}
 		}
 	}
@@ -52,12 +52,7 @@ function toType(name: TypE, sa_va_va_va?: typeof Value[] | boolean, tr_sa_pr_pr?
 // | [string, string | ((value: Value | Value[], global?: boolean) => string), TypE | string] | [string, string | ((value: Value | Value[], global?: boolean) => string), TypE | string, (string | TypE | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]]
 //function toProp(name: string, translation: string | ((value: Value | Value[], global?: boolean) => string) | null | (string | ((value: Value | Value[], global?: boolean) => string) | null)[], type: Type | TypE | string): [string, typeof Prop]
 //function toProp(name: string, translation: string | ((value: Value | Value[], global?: boolean) => string) | null | (string | ((value: Value | Value[], global?: boolean) => string) | null)[], type: Type | TypE | string, parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]): [string, typeof Prop]
-function toProp(name: string,
-	translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[],
-	type: Type | TypE | string | (Type | TypE | string)[] = TypE.void,
-	parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [],
-	modifiers?: string | string[], lines = 1,
-	optReturn = "", retType = TypE.undefined): [string, typeof Prop] {
+function toProp(name: string, translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[], type: Type | TypE | string | (Type | TypE | string)[] = TypE.void, parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [], modifiers?: string | string[], lines = 1, optReturn = "", retType = TypE.void): [string, typeof Prop] {
 	modifiers = modifiers ? [...modifiers] : undefined
 	return [name, class extends Prop {
 		getter = translation instanceof Array ? translation[0] || null : translation
@@ -66,8 +61,6 @@ function toProp(name: string,
 		modifier = translation instanceof Array ? translation[2] || null : null
 		static access: PropType = (translation ? (translation instanceof Array ? (translation[0] ? PropType.get : 0) | (translation[1] ? PropType.set : 0) | (translation[2] ? PropType.mod : 0) : PropType.get) : 0)
 		static type = type;
-		static retType = retType;
-		static optReturn = optReturn.length ? optReturn : null;
 		static params = parameters
 		lines = lines
 		static modifiers = modifiers as string[] | undefined
@@ -77,14 +70,9 @@ function toProp(name: string,
 	}]
 }
 
-function arProp(name: string,
-	translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[],
-	type: Type | TypE | string | (Type | TypE | string)[] = TypE.void,
-	parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [],
-	modifiers?: string | string[], lines = 1,
-	optReturn = "", retType = TypE.void): [string, typeof Prop] {
-	let p = toProp(name, translation, type, parameters, modifiers, lines, optReturn, retType)
-	p[1].array = true
+function arProp(name: string, translation: string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null | (string | ((value: Value | Value[], global?: boolean, indent?: string) => string) | null)[], type: Type | TypE | string | (Type | TypE | string)[] = TypE.void, parameters: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = [], modifiers?: string | string[], lines = 1): [string, typeof Prop] {
+	let p = toProp(name, translation, type, parameters, modifiers, lines)
+	p[1].array = true;
 	return p
 }
 
@@ -141,7 +129,7 @@ export enum TypE {
 export interface Value {
 	comments: Comment[]
 	value?: any
-	toString(global?: boolean, indent?: string, stack?: string[]): string
+	toString(global?: boolean, indent?: string): string
 	const: boolean
 }
 
@@ -155,7 +143,7 @@ export class Value implements Value {
 		else return false
 	}
 	static typE = TypE.undefined
-	static parseables: (typeof Value | typeof Variable)[]
+	static parseables: (typeof Value | typeof Variable)[];
 	get type(): Type {
 		return this.t || Type.get((<typeof Value>this.constructor).typE)
 	}
@@ -164,7 +152,7 @@ export class Value implements Value {
 		return new ArrayInit
 	}
 	constructor(comments?: Comment[], v?: any) {
-		this.comments = comments || []
+		this.comments = comments || [];
 	}
 	static parse(texti: string | null | undefined, global: VariableBlock, local?: VariableBlock, type?: Type | TypE | (Type | TypE)[]): Value | null {
 		if (texti)
@@ -179,7 +167,7 @@ export class Value implements Value {
 			if (end == text.length - 1 && end > 0)
 				text = text.substring(1, end)
 			else
-				break
+				break;
 		} while (true)
 		if (text == "" || /^(global|local)\b/.test(text) || (!/^(["']|new)/.test(text) && /\w[\n\s]+\w/.test(text))) return null
 		if (type != undefined) {
@@ -216,7 +204,7 @@ export class Value implements Value {
 			return a
 		}
 
-		var ret: Value | null = null
+		var ret: Value | null = null;
 
 		this.parseables.find((v) => { if (v.parse != Value.parse) ret = v.parse(text, global, local); return ret })
 		return ret
@@ -251,9 +239,9 @@ export class Func {
 export class Variable implements Value {
 	const = false
 	isValue = Value.isValue
-	type: Type
+	type: Type;
 	comments: Comment[] = [];
-	pointer: string | number
+	pointer: string | number;
 	global = true
 	name = "a"
 	static playerVars = "A"
@@ -293,13 +281,13 @@ export class Variable implements Value {
 	}
 }
 export class AbstractValue extends Value {
-	value: any
+	value: any;
 	array: boolean = false;
 	comments: Comment[] = [];
 
 	constructor(comments?: Comment[], v?: any) {
 		super()
-		this.comments = comments || []
+		this.comments = comments || [];
 		this.value = v
 	}
 	toString(global: boolean = true) {
@@ -309,11 +297,8 @@ export class AbstractValue extends Value {
 
 export class Prop extends AbstractValue {
 	lines = 1
-	ret = true;
 	static array = false;
 	static type: TypE | string | Type | (Type | TypE | string)[]
-	static retType: TypE | string | Type | (Type | TypE | string)[]
-	static optReturn: string | null
 	set const(v) { }
 	get const() {
 		return this.value instanceof Array ? this.value.every((v) => v.const) : this.value.const
@@ -324,7 +309,7 @@ export class Prop extends AbstractValue {
 	public get types(): Type[] {
 		let t = (<typeof Prop>this.constructor).type
 		let array = (t instanceof Array) ? t : [t]
-		let ts: Type[] = []
+		let ts: Type[] = [];
 		array.forEach((t) => {
 
 			if (Type.instance(t))
@@ -341,7 +326,7 @@ export class Prop extends AbstractValue {
 			return Type.get(TypE.undefined)
 			//	throw "help" 
 		})
-		return ts
+		return ts;
 	}
 	public get type(): Type {
 		let t = (<typeof Prop>this.constructor).type
@@ -349,23 +334,6 @@ export class Prop extends AbstractValue {
 			return t as Type
 		if (_.values(TypE).includes(<TypE>t))
 			return Type.get((<typeof Prop>this.constructor).type as TypE)
-		var v = this.value instanceof Array ? this.value[0] : this.value
-		while (/-t/.test(t as string) && v.value) {
-			t = (t as string).substring(1)
-			v = v.value instanceof Array ? this.value[0] : this.value
-		}
-		if (v && v.type)
-			return v.type
-		//	throw "help"
-		return Type.get(TypE.undefined)
-
-	}
-	public get rettype(): Type {
-		let t = (<typeof Prop>this.constructor).retType
-		if (Type.instance(t))
-			return t as Type
-		if (_.values(TypE).includes(<TypE>t))
-			return Type.get(t as TypE)
 		var v = this.value instanceof Array ? this.value[0] : this.value
 		while (/-t/.test(t as string) && v.value) {
 			t = (t as string).substring(1)
@@ -390,7 +358,7 @@ export class Prop extends AbstractValue {
 	static params: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[])[] = []
 	constructor(comments?: Comment[], v?: any) {
 		super()
-		this.comments = comments || []
+		this.comments = comments || [];
 		this.value = v
 	}
 
@@ -399,7 +367,10 @@ export class Prop extends AbstractValue {
 		let test = splitWP(text, /[",+\-*/\^&|]/).length == 1
 		var arr = splitWP(text, /\./)
 		arr = test ? arr : []
-		type = Type.as(type)
+		if (typeof type == "string")
+			if (Type.has(type))
+				type = Type.get(type)
+			else return null
 		var val = null
 		if (arr.length >= 2)
 			val = Value.parse(arr.slice(0, arr.length - 1).join("."), global, local)
@@ -417,11 +388,11 @@ export class Prop extends AbstractValue {
 						let props: (Value | null)[] = []
 						let ind = 0
 						for (let index = 0; index < prop.params.length; index++) {
-							const v: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]) = prop.params[index]
+							const v: (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null) | (string | Type | ((value: Value, text: string, global: VariableBlock, local: VariableBlock) => Value | null))[]) = prop.params[index];
 							let l: Value | null = null
 							if (v instanceof Array) {
 								for (let i = 0; i < v.length && !l; i++) {
-									const e: any = v[i]
+									const e: any = v[i];
 									if (typeof e == "function") {
 										l = e(val, arr2[ind] || "", global, local as VariableBlock)
 										if (l) ind++
@@ -441,10 +412,10 @@ export class Prop extends AbstractValue {
 													if (val.type instanceof ArrayType)
 														l = Value.parse(arr2[ind] || "", global, local, (<ArrayType>(val).type).type)
 													if (l) ind++
-													break
+													break;
 												case "v":
 													l = val
-													break
+													break;
 											}
 										}
 								}
@@ -464,10 +435,10 @@ export class Prop extends AbstractValue {
 										case "-[]":
 											if (val.type instanceof ArrayType)
 												l = Value.parse(arr2[ind++] || "", global, local, (<ArrayType>(val).type).type)
-											break
+											break;
 										case "v":
 											l = val
-											break
+											break;
 									}
 								}
 							if (!l)
@@ -481,18 +452,15 @@ export class Prop extends AbstractValue {
 					}
 					return null
 				}
-				let value = new prop([], val)
-				if (value.rettype == type)
-					value.ret = true
-				if (type == Type.undefined || value.type == type || value.rettype == type)
-					return value
+				return new prop([], val)
+
 			}
 		}
 
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", stack: string[] = [], set: Value | null | boolean = null, mod = "") {
+	toString(global: boolean = true, indent = "", set: Value | null | boolean = null, mod = "") {
 		let n = set ? (mod ? this.modifier || "" : this.setter || "") : this.getter
 		if (typeof n == "function")
 			var name = n(this.value, global, indent)
@@ -585,7 +553,7 @@ export class Class extends AbstractValue {
 		var m = /^new\s*(?<name>[\p{Alphabetic}_][\p{Alphabetic}_0-9]*)[\s]*(\((?<params>[^]*?)\))?$/u.exec(text)
 		if (m && m.groups) {
 			let name = m.groups.name
-			var paramS = splitWP(m.groups.params, /,/)
+			var paramS = splitWP(m.groups.params, /,/);
 			let keys = _.filter(
 				Array.from(this.classes.keys()),
 				(key) => Number.parseInt(key.substring(name.length)) > paramS.length
@@ -597,7 +565,7 @@ export class Class extends AbstractValue {
 							(entry) => entry.defaults.length > 0)))
 			if (c) {
 				for (let index = 0; index < c.length; index++) {
-					const element = c[index]
+					const element = c[index];
 
 					let types = element.types
 					let params: (Value | null | string | boolean)[] = _.map(types, (t, i) => Value.parse(paramS[i], global, local, t))
@@ -756,7 +724,7 @@ export class StringConst extends AbstractValue {
 				let jumpbackI = []
 				let jumpbackJ = []
 				for (let i = 0; i < a.length; i += 2) {
-					let t
+					let t;
 					for (let j = 0; !t; j += 2) {
 						if (j >= this.maxSpace * 2 || i + j == a.length) {
 							i = jumpbackI.pop() as number
@@ -770,7 +738,7 @@ export class StringConst extends AbstractValue {
 							jumpbackI.push(i)
 							jumpbackJ.push(j)
 							i += j
-							break
+							break;
 						} else {
 							if (i + j + 1 > a.length)
 								break
@@ -1060,7 +1028,7 @@ export class VectorOp extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, any?: any, stack = []): string {
+	toString(global: boolean = true): string {
 		if (this.operator.includes("$"))
 			return this.operator.replace(/\$p(\d+)\$/g, (a, b) => { return (this.values[parseFloat(b)] || "Null").toString(global) })
 		return this.operator + "(" + this.values[0].toString(global) + ", " + this.values[1].toString(global) + ")"
@@ -1145,12 +1113,12 @@ export class BoolOp extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", stack = [], cond = false): string {
+	toString(global: boolean = true, indent = "", cond = false): string {
 		if (cond)
 			if (this.operator == boolOp.not)
-				return this.values[0].toString(global, indent, stack) + " == False"
+				return this.values[0].toString() + " == False"
 			else
-				return this.toString(global, indent, stack) + " == True"
+				return this.toString(global) + " == True"
 		switch (this.operator) {
 			case boolOp.and:
 				return "And(" + this.values[0].toString(global) + ", " + this.values[1].toString(global) + ")"
@@ -1175,7 +1143,7 @@ export class BoolOp extends AbstractValue {
 					[new BoolOp(undefined, boolOp.nand, [this.values[0], this.values[1]]),
 					new BoolOp(undefined, boolOp.or, [this.values[0], this.values[1]])]).toString(global)
 			default:
-				return "False"
+				return "False";
 		}
 	}
 }
@@ -1229,7 +1197,7 @@ export class Comp extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", stack = [], cond = false) {
+	toString(global: boolean = true, indent = "", cond = false) {
 		if (cond)
 			return this.value1.toString(global) + " " + this.condition + " " + this.value2.toString(global)
 		else return "Compare(" + this.value1.toString(global) + ", " + this.condition + ", " + this.value2.toString(global) + ")"
@@ -1254,7 +1222,7 @@ export class BoolConst extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", stack = [], con = false) {
+	toString(global: boolean = true, indent = "", con = false) {
 		if (con)
 			if (this.value)
 				return "True == True"
@@ -1278,7 +1246,7 @@ export enum PlayerE {
 
 
 export class PlayerConst extends AbstractValue {
-	value: PlayerE
+	value: PlayerE;
 	static typE = TypE.playerConst
 	typE = Type.get(PlayerConst.typE)
 	constructor(comments?: Comment[], player?: PlayerE) {
@@ -1388,7 +1356,7 @@ export class PlayerConst extends AbstractValue {
 		return null
 	}
 
-	toString(global: boolean = true, indent = "", stack = [], event = false): string {
+	toString(global: boolean = true, indent = "", event = false): string {
 		if (event)
 			return this.value
 		//TODO observe behavior in FFA
@@ -1418,7 +1386,7 @@ export enum TeamE {
 }
 
 export class TeamConst extends AbstractValue {
-	value: any
+	value: any;
 	static typE = TypE.teamConst
 	typE = Type.get(TeamConst.typE)
 	constructor(comments?: Comment[], team?: TeamE) {
@@ -1444,7 +1412,7 @@ export class TeamConst extends AbstractValue {
 		return null
 	}
 
-	toString(): string {
+	toString(global: boolean = true, indent = "", event?: boolean): string {
 		return this.value
 	}
 }
@@ -1610,17 +1578,17 @@ export class Type {
 	op(op: string): string {
 		switch (op) {
 			case "+":
-				return "Add"
+				return "Add";
 			case "/":
-				return "Divide"
+				return "Divide";
 			case "%":
-				return "Modulo"
+				return "Modulo";
 			case "*":
-				return "Multiply"
+				return "Multiply";
 			case "^":
-				return "Raise To Power"
+				return "Raise To Power";
 			case "-":
-				return "Subtract"
+				return "Subtract";
 
 			default:
 				return op
@@ -1670,7 +1638,7 @@ export class Type {
 			_.each(_.pairs(TypE), (v) => { if ((v[1] as string) == text) value = Type.get(v[1]) })
 		}
 		if (value == undefined)
-			throw new SynErr(0, text.length, DiagnosticSeverity.Error, "'" + text + "' is not a Valid Type")
+			throw new SynErr(0, text.length, DiagnosticSeverity.Error, "'" + text + "' is not a Valid Type");
 		return value
 	}
 
@@ -1700,14 +1668,14 @@ export class ArrayType extends Type {
 	public set translation(v: string) { }
 	values: (typeof Value)[] = [];
 	public get props(): Properties {
-		return this.type.props.array
+		return this.type.props.array;
 	}
 	public set props(v) { };
 
 	get(key: string, array = true): typeof Prop | undefined {
 		return this.type.props.get(key, array)
 	}
-	invProps: { type: TypE; name: string }[] = [];
+	invProps: { type: TypE; name: string; }[] = [];
 	public equals(obj: Object): boolean {
 		return obj.toString() == this.toString()
 	}
@@ -1868,7 +1836,7 @@ Type.types = new Map([
 		arProp("setStatus", "Set Status($p0$, $p3$, $p1$, $p2$)", TypE.void, ["v", TypE.status, TypE.number, TypE.player]),
 		arProp("speed", [null, "Set Move Speed($v$, $s$)"], TypE.number),
 		arProp("startCamera", "Start Camera($p$)", TypE.void, ["v", TypE.vectory, TypE.vectory, TypE.number]),
-		arProp("startDamageMod", "Start Damage Modification($p0$, $p1$, $p2$, $p3|Receivers, Damagers, And Damage Percent|None$, )", TypE.void, ["v", TypE.playery, TypE.number, TypE.bool], undefined, undefined, "Last Damage Modification ID()", TypE.damageModification),
+		arProp("startDamageMod", "Start Damage Modification($p0$, $p1$, $p2$, $p3|Receivers, Damagers, And Damage Percent|None$, )", TypE.void, ["v", TypE.playery, TypE.number, TypE.bool], undefined, undefined, "Last Damage Modification ID()", TypE.damageModification, 1),
 		arProp("strength", [null, "Set Damage Dealt($v$, $s$)"], TypE.number),
 		arProp("updatingObjective", [null, "Set Objective Description($v$, $s$, Visible To and String)"], TypE.string),
 		arProp("ultimate", [null, "Set Ultimate Ability Enabled($v$, $s$)"], TypE.bool),
@@ -1907,7 +1875,7 @@ class ConstValue extends AbstractValue {
 				let name: string
 				let value: string
 				if (typeof v == "string") {
-					value = v
+					value = v;
 					t = type
 					name = toCamelSep(v)
 				} else {
@@ -1930,13 +1898,13 @@ class ConstValue extends AbstractValue {
 				}
 				this.map.set((base == "" ? "" : base + ".") + value, new ConstValue([], name, t, translation))
 
-			})
+			});
 		} else {
-			let t = Type.as(valueP as any)
+			let t = Type.as(valueP as any);
 			let name: string
 			let value: string
 			if (typeof base == "string") {
-				value = base
+				value = base;
 				name = toCamelSep(base)
 			} else {
 				value = base[0]
